@@ -1,0 +1,12 @@
+{
+  "prefix": "$ ",
+  "assets": {
+    "icon": ""
+  },
+  "colors": {
+    "primary": "#005eff",
+    "ok": "#00ff80",
+    "error": "#ff2b0f",
+    "warn": "#ffad00"
+  }
+}
