@@ -16,8 +16,8 @@ module.exports = {
       required: true,
     },
   ],
-  async execute(cmd, { client, guildID, channel, channelID, args, member }) {
-    const player = client.manager.players.get(guildID);
+  async execute(cmd, { client, guildId, channel, channelId, args, member }) {
+    const player = client.manager.players.get(guildId);
     if (!player) return cmd.reply("There is no music playing");
     if (player.voiceChannel !== member.voice.channel.id) return cmd.reply("You're not in the same voice channel as the music player");
     if (args[0] === "track") {

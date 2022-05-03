@@ -29,8 +29,21 @@ module.exports = {
     },
   ],
 
-  execute: (cmd, { client, args }) => {
+  permissions: ["MANAGE_GUILD"],
+
+  execute: async (cmd, { client, guildId, args }) => {
+    const targetCommand = args[1];
     switch (args[0]) {
+      case "on":
+        break;
+      case "off":
+        await client.disabledCommands.set({
+          guildId,
+          command,
+        });
+
+        break;
+      default:
     }
 
     cmd.reply({

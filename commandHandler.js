@@ -51,7 +51,7 @@ async function initialize(client, config = {}) {
     return query;
   };
 
-  client.on("messageCreate", (message) => {
+  client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
     if (message.content.startsWith(`<@${client.user.id}>`) || message.content.startsWith(`<@!${client.user.id}>`))
       return client.commands.get("help").execute(message, { client, config: botConfig });
@@ -64,11 +64,23 @@ async function initialize(client, config = {}) {
     const guildDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
     if (guildDisabledCommands && guildDisabledCommands.commands.includes(command)) return; // TODO: Display command disabled msg
 
+    if (command.permissions && !command.permissions.every((flag) => message.member.permissions.has(flag))) return console.log("falsdfl;jsdaf;j"); // TODO: Send insufficient permissons message
+
     args.shift();
 
     // Validate args
     const validationResult = command.expectedArgs.map((expectedArg, i) => {
       if (!args[i]) return new Error(`${expectedArg.name} is required`);
+      if (expectedArg.options) {
+        const optionsList = [];
+
+        for (let o = 0, n = expectedArg.options.length; o < n; ++o) {
+          if (expectedArg.options[o].name.toLowerCase() === args[i].toLowerCase()) return (args[i] = expectedArg.options[o].value);
+          optionsList.push(expectedArg.options[o].name);
+        }
+        return new Error(`Not ${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`);
+      }
+
       switch (expectedArg.type.toLowerCase()) {
         case "string": {
           return true;
@@ -129,6 +141,7 @@ async function initialize(client, config = {}) {
         }
       }
     });
+
     for (const a of validationResult) {
       if (a instanceof Error) {
         return message.channel.send(a.message);
@@ -138,18 +151,18 @@ async function initialize(client, config = {}) {
     const props = {
       client,
       config: botConfig,
-      guildID: message.guildId,
+      guildId: message.guildId,
       user: message.user,
       member: message.member,
       channel: message.channel,
-      channelID: message.channelId,
+      channelId: message.channelId,
       permissions: message,
       isInteraction: false,
       args,
     };
 
     try {
-      command.execute(message, props);
+      await command.execute(message, props);
     } catch (err) {
       console.error(err);
     }
@@ -173,11 +186,11 @@ async function initialize(client, config = {}) {
     const props = {
       client,
       config: botConfig,
-      guildID: interaction.guildId,
+      guildId: interaction.guildId,
       user: interaction.user,
       member: interaction.member,
       channel: interaction.channel,
-      channelID: interaction.channelId,
+      channelId: interaction.channelId,
       isInteraction: true,
       args,
     };

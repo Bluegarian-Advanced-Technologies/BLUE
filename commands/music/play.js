@@ -14,12 +14,12 @@ module.exports = {
       required: true,
     },
   ],
-  async execute(cmd, { client, guildID, channel, channelID, args }) {
+  async execute(cmd, { client, guildId, channel, channelId, args }) {
     const res = await client.manager.search(args.join(" "), cmd.author);
     const player = client.manager.create({
-      guild: guildID,
+      guild: guildId,
       voiceChannel: cmd.member.voice.channel.id,
-      textChannel: channelID,
+      textChannel: channelId,
     });
 
     player.connect();
