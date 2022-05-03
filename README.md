@@ -2,4 +2,4 @@
 
 ## Bluegarian Logistics Universal Emulator
 
-An Advanced Discord robot used by Bluegaria and
+An advanced private Discord robot used by Bluegaria and associates.
