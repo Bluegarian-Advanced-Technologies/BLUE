@@ -34,12 +34,14 @@ class LiveCollection {
   async update(query, value) {
     // update is like schema.findOneAndUpdate(query, value)
     const document = await this.schema.findOneAndUpdate(query, value);
-    this.values = this.values.filter((g) =>
-      Object.keys(g)
-        .map((key) => query[key] === g[key])
-        .every((value) => value)
-    );
-    this.values.push(document);
+    // this.values = this.values.filter((g) =>
+    //   Object.keys(g)
+    //     .map((key) => query[key] === g[key])
+    //     .every((value) => value)
+    // );
+    // this.values.push(document.value);
+
+    this.values = await this.schema.find({});
 
     return document;
   }

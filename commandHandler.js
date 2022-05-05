@@ -1,6 +1,7 @@
 const { Collection } = require("discord.js");
 const { Routes } = require("discord-api-types/v9");
 const { REST } = require("@discordjs/rest");
+const { Permissions } = require("discord.js");
 
 const botConfig = require("./config.json");
 
@@ -25,7 +26,7 @@ async function initialize(client, config = {}) {
 
   for (let i = 0; i < commands.length; i++) {
     const command = commands[i];
-    const registration = await registerCommand.register(client, command);
+    const registration = registerCommand.register(client, command);
     if (registration) slashCommandsPayload.push(registration.data.toJSON());
   }
 
@@ -38,6 +39,7 @@ async function initialize(client, config = {}) {
       await rest.put(Routes.applicationCommands("969385645963370496"), { body: slashCommandsPayload });
     } else {
       await rest.put(Routes.applicationGuildCommands("969385645963370496", "738768458627416116"), { body: slashCommandsPayload });
+      await rest.put(Routes.applicationGuildCommands("969385645963370496", "905595623208796161"), { body: slashCommandsPayload });
     }
 
     console.log("Successfully reloaded application (/) commands.");
@@ -62,9 +64,9 @@ async function initialize(client, config = {}) {
     if (!command) return;
 
     const guildDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
-    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command)) return; // TODO: Display command disabled msg
+    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id)) return; // TODO: Display command disabled msg
 
-    if (command.permissions && !command.permissions.every((flag) => message.member.permissions.has(flag))) return console.log("falsdfl;jsdaf;j"); // TODO: Send insufficient permissons message
+    if (command.permissions && !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag]))) return; // TODO: Send insufficient permissons message
 
     args.shift();
 
@@ -175,7 +177,9 @@ async function initialize(client, config = {}) {
     if (!command) return;
 
     const guildDisabledCommands = client.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
-    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command)) return; // TODO: Display command disabled msg
+    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id)) return; // TODO: Display command disabled msg
+
+    if (command.permissions && !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag]))) return; // TODO: Send insufficient permissons message
 
     const args = [];
 
@@ -195,12 +199,12 @@ async function initialize(client, config = {}) {
       args,
     };
 
-    try {
-      await command.execute(interaction, props);
-    } catch (error) {
-      console.error(chalk.default.red(`${error}`));
-      await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
-    }
+    // try {
+    await command.execute(interaction, props);
+    // } catch (error) {
+    //   console.error(chalk.default.red(`${error}`));
+    //   await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
+    // }
   });
 }
 

@@ -1,7 +1,13 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const utils = require("../utils.js");
+const { Permissions } = require("discord.js");
 
-const registerCommand = (client, cmd) => {
+const permissionsList = [];
+
+Object.keys(Permissions.FLAGS).map((permission) => {
+  permissionsList.push(permission);
+});
+
+function registerCommand(client, cmd) {
   const command = require(cmd);
 
   if (command.notCommand) return false;
@@ -35,7 +41,15 @@ const registerCommand = (client, cmd) => {
     }
   }
 
-  command.expectedArgs = expectedArgs;
+  if (command.permissions) {
+    for (let i = 0; i < command.permissions.length; i++) {
+      const permission = command.permissions[i];
+      if (!permissionsList.includes(permission))
+        return console.error(
+          `\n------------------------------------\n!!! Invalid permission '${permission}' in command '${command.id}'\n------------------------------------\n`
+        );
+    }
+  }
 
   for (let i = 0; i < aliases.length; i++) {
     const alias = aliases[i];
@@ -53,6 +67,6 @@ const registerCommand = (client, cmd) => {
   if (command.init) command.init({ client });
 
   return command;
-};
+}
 
 module.exports = { register: registerCommand };

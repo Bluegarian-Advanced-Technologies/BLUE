@@ -1,15 +1,13 @@
-const { Database, Environment } = require("@nextium/common");
+const { Database } = require("@nextium/common");
 
-if (process.env.NODE_ENV !== "production") {
-  const env = Environment.load(["MONGODB_URI", "TOKEN"]);
-  Object.keys(env).map((key) => (process.env[key] = env[key].trim()));
-}
+if (process.env.NODE_ENV !== "production") require("dotenv").config();
 
 const { Client, Intents } = require("discord.js");
 const { Manager } = require("erela.js");
 
 const commandHandler = require("./commandHandler.js");
 const eventHandler = require("./eventHandler.js");
+
 const music = require("./music.js");
 
 const config = require("./config.json");
