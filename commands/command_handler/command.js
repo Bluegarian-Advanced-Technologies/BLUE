@@ -31,18 +31,18 @@ module.exports = {
 
   permissions: ["MANAGE_GUILD"],
 
-  execute: async (cmd, { client, guildId, args }) => {
+  execute: async (cmd, { client, guildId, channel, args }) => {
     const targetCommand = args[1];
 
     const cachedDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
 
-    // console.log(cachedDisabledCommands);
-
     switch (args[0]) {
       case "on":
-        if (!cachedDisabledCommands.commands.includes(targetCommand)) return; // TODO: Display not disabled message
+        if (!cachedDisabledCommands.commands.includes(targetCommand)) return channel.send("Command not disabled yet"); // TODO: Display not disabled message
 
-        await client.disabledCommands.update({ guildId }, { commands: cachedDisabledCommands.commands.filter((c) => c !== targetCommand) });
+        client.disabledCommands.update({ guildId, $pull: {commands: targetCommand} }, (commands) => 
+          commands.filter((c) => c !== targetCommand)
+        );
 
         break;
       case "off":
@@ -52,8 +52,8 @@ module.exports = {
             commands: [targetCommand],
           });
         } else {
-          if (cachedDisabledCommands.commands.includes(targetCommand)) return; // TODO: Display already disabled message
-          await client.disabledCommands.update({ guildId }, { commands: [...cachedDisabledCommands.commands, targetCommand] });
+          if (cachedDisabledCommands.commands.includes(targetCommand)) return channel.send("Command already disabled"); // TODO: Display already disabled message
+          await client.disabledCommands.update({ guildId, $push: {commands: targetCommand} }, () => [...cachedDisabledCommands.commands, targetCommand]);
         }
         break;
       default:

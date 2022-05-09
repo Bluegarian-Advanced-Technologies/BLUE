@@ -26,34 +26,36 @@ class LiveCollection {
   }
 
   async set(value) {
-    const document = await this.schema.create(value);
+    const document = new this.schema(value);
     this.values.push(document);
+
+    document.save();
 
     return document;
   }
-  async update(query, value) {
-    // update is like schema.findOneAndUpdate(query, value)
-    const document = await this.schema.findOneAndUpdate(query, value);
+  async update(query, cb) {
+    const document = this.schema.findOneAndUpdate(query);
+
+    this.values = cb(this.values);
+
     // this.values = this.values.filter((g) =>
     //   Object.keys(g)
     //     .map((key) => query[key] === g[key])
     //     .every((value) => value)
     // );
     // this.values.push(document.value);
-
-    this.values = await this.schema.find({});
-
-    return document;
   }
 
-  async delete(query) {
+  async delete(query, cb) {
     const document = await this.schema.findOneAndDelete(query);
-    this.values = this.values.filter((g) =>
-      Object.keys(g)
-        .map((key) => query[key] === g[key])
-        .every((value) => value)
-    );
-    return document;
+
+    this.values = cb(this.values);
+
+    // this.values = this.values.filter((g) =>
+    //   Object.keys(g)
+    //     .map((key) => query[key] === g[key])
+    //     .every((value) => value)
+    // );
   }
 }
 
