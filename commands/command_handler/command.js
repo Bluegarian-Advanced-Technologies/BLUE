@@ -1,3 +1,9 @@
+function findTextCommand(client, cmd) {
+  const query = client.commands.get(cmd);
+  if (query?.alias) return client.commands.get(query.cmdName);
+  return query;
+}
+
 module.exports = {
   id: "command",
   description: "Enable or disable commands",
@@ -24,36 +30,56 @@ module.exports = {
     {
       type: "String",
       name: "command",
-      description: "Targetted command",
+      description: "Targeted command",
       required: true,
     },
   ],
 
   permissions: ["MANAGE_GUILD"],
 
-  execute: async (cmd, { client, guildId, channel, args }) => {
+  execute: async (cmd, { client, guildId, isInteraction, channel, args }) => {
     const targetCommand = args[1];
 
-    const cachedDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
+    if (isInteraction) {
+      if (!client.commands.get(targetCommand)) return channel.send("Command non-existent");
+    } else {
+      if (!findTextCommand(client, targetCommand)) return channel.send("Command non-existent");
+    }
+
+    const cachedServer = client.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
+
+    // console.log(client.disabledCommands.getAll());
 
     switch (args[0]) {
       case "on":
-        if (!cachedDisabledCommands.commands.includes(targetCommand)) return channel.send("Command not disabled yet"); // TODO: Display not disabled message
+        if (!cachedServer || !cachedServer.commands.includes(targetCommand)) return channel.send("Command not disabled yet"); // TODO: Display not disabled message
 
-        client.disabledCommands.update({ guildId, $pull: {commands: targetCommand} }, (commands) => 
-          commands.filter((c) => c !== targetCommand)
-        );
+        client.disabledCommands.update({ guildId, $pull: { commands: targetCommand } }, (servers) => {
+          const targetServer = servers.find((server) => server.guildId === guildId);
+
+          for (let i = 0; i < targetServer.commands.length; ++i) {
+            if (targetServer.commands[i] === targetCommand) {
+              targetServer.commands.splice(i, 1);
+              break;
+            }
+          }
+
+          console.log(targetServer);
+          return targetServer;
+        });
 
         break;
       case "off":
-        if (!cachedDisabledCommands) {
-          await client.disabledCommands.set({
+        if (!cachedServer) {
+          client.disabledCommands.set({
             guildId,
             commands: [targetCommand],
           });
         } else {
-          if (cachedDisabledCommands.commands.includes(targetCommand)) return channel.send("Command already disabled"); // TODO: Display already disabled message
-          await client.disabledCommands.update({ guildId, $push: {commands: targetCommand} }, () => [...cachedDisabledCommands.commands, targetCommand]);
+          if (cachedServer.commands.includes(targetCommand)) return channel.send("Command already disabled"); // TODO: Display already disabled message
+          client.disabledCommands.update({ guildId, $push: { commands: targetCommand } }, (servers) => {
+            servers.find((server) => server.guildId === guildId).commands.push(targetCommand);
+          });
         }
         break;
       default:

@@ -47,11 +47,11 @@ async function initialize(client, config = {}) {
     console.error(error);
   }
 
-  const findTextCommand = (cmd) => {
+  function findTextCommand(cmd) {
     const query = client.commands.get(cmd);
     if (query?.alias) return client.commands.get(query.cmdName);
     return query;
-  };
+  }
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
@@ -64,7 +64,7 @@ async function initialize(client, config = {}) {
     if (!command) return;
 
     const guildDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
-    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id)) return; // TODO: Display command disabled msg
+    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id)) return message.channel.send("Command disabled in server"); // TODO: Display command disabled msg
 
     if (command.permissions && !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag]))) return; // TODO: Send insufficient permissons message
 
@@ -72,6 +72,7 @@ async function initialize(client, config = {}) {
 
     // Validate args
     const validationResult = command.expectedArgs.map((expectedArg, i) => {
+      if (!expectedArg.required) return;
       if (!args[i]) return new Error(`${expectedArg.name} is required`);
       if (expectedArg.options) {
         const optionsList = [];
@@ -177,7 +178,7 @@ async function initialize(client, config = {}) {
     if (!command) return;
 
     const guildDisabledCommands = client.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
-    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id)) return; // TODO: Display command disabled msg
+    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id)) return interaction.channel.send("Command disabled in server"); // TODO: Display command disabled msg
 
     if (command.permissions && !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag]))) return; // TODO: Send insufficient permissons message
 

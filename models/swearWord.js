@@ -1,6 +1,6 @@
-const { DatabaseSchema } = require("@nextium/common");
+const mongoose = require("mongoose");
 
-const swearWord = new DatabaseSchema("swearWord", {
+const swearWord = mongoose.Schema({
   word: {
     type: String,
     maxLength: 256,
@@ -13,4 +13,4 @@ const swearWord = new DatabaseSchema("swearWord", {
   },
 });
 
-module.exports = swearWord;
+module.exports = mongoose.model("swearWord", swearWord);

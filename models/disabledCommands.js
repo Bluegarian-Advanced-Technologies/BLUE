@@ -1,6 +1,6 @@
-const { DatabaseSchema } = require("@nextium/common");
+const mongoose = require("mongoose");
 
-const disabledCommand = new DatabaseSchema("disabledCommand", {
+const disabledCommand = mongoose.Schema({
   guildId: {
     type: String,
     required: true,
@@ -13,4 +13,4 @@ const disabledCommand = new DatabaseSchema("disabledCommand", {
   },
 });
 
-module.exports = disabledCommand;
+module.exports = mongoose.model("disabledCommand", disabledCommand);

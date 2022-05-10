@@ -34,9 +34,9 @@ class LiveCollection {
     return document;
   }
   async update(query, cb) {
-    const document = this.schema.findOneAndUpdate(query);
+    const document = this.schema.findOneAndUpdate(query).then((doc) => console.log(doc));
 
-    this.values = cb(this.values);
+    cb(this.values);
 
     // this.values = this.values.filter((g) =>
     //   Object.keys(g)
@@ -49,7 +49,7 @@ class LiveCollection {
   async delete(query, cb) {
     const document = await this.schema.findOneAndDelete(query);
 
-    this.values = cb(this.values);
+    cb(this.values);
 
     // this.values = this.values.filter((g) =>
     //   Object.keys(g)

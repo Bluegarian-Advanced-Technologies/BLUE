@@ -1,9 +1,8 @@
-const { Database } = require("@nextium/common");
-
 if (process.env.NODE_ENV !== "production") require("dotenv").config();
 
 const { Client, Intents } = require("discord.js");
 const { Manager } = require("erela.js");
+const mongoose = require("mongoose");
 
 const commandHandler = require("./commandHandler.js");
 const eventHandler = require("./eventHandler.js");
@@ -28,7 +27,9 @@ client.once("ready", async () => {
 });
 
 console.log("Connecting to MongoDB database...");
-const db = new Database(process.env.MONGODB_URI, "BLUE");
+mongoose.connect(process.env.MONGO_URI);
+
+const db = mongoose.connection;
 
 db.on("connected", () => {
   console.log("Connected to MongoDB database");
@@ -42,7 +43,6 @@ db.on("disconnected", () => {
 
 (async () => {
   music(client);
-  await db.connect();
   await commandHandler.initialize(client, { prefix: config.prefix });
   await eventHandler.initialize(client);
   await client.login(process.env.TOKEN);
