@@ -6,6 +6,7 @@ const { Permissions } = require("discord.js");
 const botConfig = require("./config.json");
 
 const utils = require("./utils.js");
+const { embedMessage } = utils;
 const registerCommand = require("./BACH/registerCommand");
 const LiveCollection = require("./classes/LiveCollection");
 
@@ -63,10 +64,30 @@ async function initialize(client, config = {}) {
     const command = findTextCommand(args[0]);
     if (!command) return;
 
-    const guildDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
-    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id)) return message.channel.send("Command disabled in server"); // TODO: Display command disabled msg
+    function textReply(content = "", ping = false, options = {}) {
+      const { embeds, files, tts } = options;
+      const reply = {
+        allowedMentions: {
+          repliedUser: ping,
+        },
+      };
 
-    if (command.permissions && !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag]))) return; // TODO: Send insufficient permissons message
+      if (content) reply.content = content.substring(0, 2000);
+      if (embeds) reply.embeds = embeds;
+      if (files) reply.files = files;
+      if (tts) reply.tts = tts;
+
+      message.reply(reply);
+    }
+
+    const guildDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
+    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id))
+      return textReply(null, false, { embeds: [embedMessage("Command Disabled", "This command is disabled in the server", "error")] });
+
+    if (command.permissions && !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag])))
+      return textReply(null, false, {
+        embeds: [embedMessage("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error")],
+      });
 
     args.shift();
 
@@ -161,6 +182,7 @@ async function initialize(client, config = {}) {
       channelId: message.channelId,
       permissions: message,
       isInteraction: false,
+      reply: textReply,
       args,
     };
 
@@ -177,15 +199,35 @@ async function initialize(client, config = {}) {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
-    const guildDisabledCommands = client.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
-    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id)) return interaction.channel.send("Command disabled in server"); // TODO: Display command disabled msg
+    function interactionReply(content = "", ephemeral = false, options = {}) {
+      const { embeds, files, tts } = options;
+      const reply = {
+        ephemeral,
+      };
 
-    if (command.permissions && !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag]))) return; // TODO: Send insufficient permissons message
+      if (content) reply.content = content.substring(0, 2000);
+      if (embeds) reply.embeds = embeds;
+      if (files) reply.files = files;
+      if (tts) reply.tts = tts;
+
+      interaction.reply(reply);
+    }
+
+    const guildDisabledCommands = client.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
+    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id))
+      return interactionReply(null, false, { embeds: [embedMessage("Command Disabled", "This command is disabled in the server", "error")] });
+
+    if (command.permissions && !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag])))
+      interactionReply(null, false, {
+        embeds: [embedMessage("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error")],
+      });
 
     const args = [];
 
     for (const arg of command.expectedArgs) {
-      args.push(interaction.options.get(arg.name).value);
+      const interactionOption = interaction.options.get(arg.name);
+      if (!arg.required && !interactionOption) continue;
+      args.push(interactionOption.value);
     }
 
     const props = {
@@ -197,15 +239,16 @@ async function initialize(client, config = {}) {
       channel: interaction.channel,
       channelId: interaction.channelId,
       isInteraction: true,
+      reply: interactionReply,
       args,
     };
 
-    // try {
-    await command.execute(interaction, props);
-    // } catch (error) {
-    //   console.error(chalk.default.red(`${error}`));
-    //   await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
-    // }
+    try {
+      await command.execute(interaction, props);
+    } catch (error) {
+      console.error(chalk.default.red(`${error}`));
+      await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
+    }
   });
 }
 

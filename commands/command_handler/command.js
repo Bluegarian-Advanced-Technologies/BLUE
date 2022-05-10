@@ -1,3 +1,5 @@
+const utils = require("../../utils");
+
 function findTextCommand(client, cmd) {
   const query = client.commands.get(cmd);
   if (query?.alias) return client.commands.get(query.cmdName);
@@ -37,18 +39,16 @@ module.exports = {
 
   permissions: ["MANAGE_GUILD"],
 
-  execute: async (cmd, { client, guildId, isInteraction, channel, args }) => {
+  execute: async (cmd, { client, guildId, isInteraction, channel, reply, args }) => {
     const targetCommand = args[1];
 
     if (isInteraction) {
-      if (!client.commands.get(targetCommand)) return channel.send("Command non-existent");
+      if (!client.commands.get(targetCommand)) return reply("Command non-existent");
     } else {
-      if (!findTextCommand(client, targetCommand)) return channel.send("Command non-existent");
+      if (!findTextCommand(client, targetCommand)) return reply("Command non-existent");
     }
 
     const cachedServer = client.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
-
-    // console.log(client.disabledCommands.getAll());
 
     switch (args[0]) {
       case "on":
@@ -63,9 +63,6 @@ module.exports = {
               break;
             }
           }
-
-          console.log(targetServer);
-          return targetServer;
         });
 
         break;

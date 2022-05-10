@@ -9,7 +9,13 @@ module.exports = {
   category: "Help",
   aliases: ["?"],
   slash: "both",
-  expectedArgs: [],
+  expectedArgs: [
+    {
+      type: "String",
+      name: "category",
+      description: "View commands of specified module category",
+    },
+  ],
 
   execute: (cmd, { client, config }) => {
     const { colors, assets } = config;
