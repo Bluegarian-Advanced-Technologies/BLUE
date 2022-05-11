@@ -64,7 +64,7 @@ async function initialize(client, config = {}) {
     const command = findTextCommand(args[0]);
     if (!command) return;
 
-    function textReply(content = "", ping = false, options = {}) {
+    function messageReply(content = "", ping = false, options = {}) {
       const { embeds, files, tts } = options;
       const reply = {
         allowedMentions: {
@@ -80,14 +80,23 @@ async function initialize(client, config = {}) {
       message.reply(reply);
     }
 
+    function embedMessageReply(title, text, status, ephemeral = false, options = {}) {
+      const reply = {
+        embeds: [embedMessage(title, text, status)],
+        ephemeral,
+      };
+
+      if (files) reply.files = files;
+
+      message.reply(reply);
+    }
+
     const guildDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
     if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id))
-      return textReply(null, false, { embeds: [embedMessage("Command Disabled", "This command is disabled in the server", "error")] });
+      return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
 
     if (command.permissions && !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag])))
-      return textReply(null, false, {
-        embeds: [embedMessage("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error")],
-      });
+      return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error");
 
     args.shift();
 
@@ -182,7 +191,8 @@ async function initialize(client, config = {}) {
       channelId: message.channelId,
       permissions: message,
       isInteraction: false,
-      reply: textReply,
+      reply: messageReply,
+      embedReply: embedMessageReply,
       args,
     };
 
@@ -213,14 +223,23 @@ async function initialize(client, config = {}) {
       interaction.reply(reply);
     }
 
+    function embedInteractionReply(title, text, status, ephemeral = false, options = {}) {
+      const reply = {
+        embeds: [embedMessage(title, text, status)],
+        ephemeral,
+      };
+
+      if (files) reply.files = files;
+
+      interaction.reply(reply);
+    }
+
     const guildDisabledCommands = client.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
     if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id))
-      return interactionReply(null, false, { embeds: [embedMessage("Command Disabled", "This command is disabled in the server", "error")] });
+      return embedInteractionReply("Command Disabled", "This command is disabled in the server", "error");
 
     if (command.permissions && !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag])))
-      interactionReply(null, false, {
-        embeds: [embedMessage("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error")],
-      });
+      return embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error");
 
     const args = [];
 
@@ -240,6 +259,7 @@ async function initialize(client, config = {}) {
       channelId: interaction.channelId,
       isInteraction: true,
       reply: interactionReply,
+      embedReply: embedInteractionReply,
       args,
     };
 

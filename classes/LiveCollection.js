@@ -33,17 +33,12 @@ class LiveCollection {
 
     return document;
   }
-  async update(query, cb) {
-    const document = this.schema.findOneAndUpdate(query).then((doc) => console.log(doc));
+  async update(filter, update, cb) {
+    const query = this.schema.findOneAndUpdate(filter, update);
 
     cb(this.values);
 
-    // this.values = this.values.filter((g) =>
-    //   Object.keys(g)
-    //     .map((key) => query[key] === g[key])
-    //     .every((value) => value)
-    // );
-    // this.values.push(document.value);
+    query.exec();
   }
 
   async delete(query, cb) {
