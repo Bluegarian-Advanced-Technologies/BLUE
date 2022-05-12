@@ -40,10 +40,10 @@ module.exports = {
   permissions: ["MANAGE_GUILD"],
 
   execute: async (cmd, { client, guildId, isInteraction, channel, embedReply, args }) => {
-    const targetCommand = args[1];
+    const targetCommand = args[1].toLowerCase();
 
     if (isInteraction) {
-      if (!client.commands.get(targetCommand)) return embedReply("Command non-existent", null, "warn");
+      if (!client.commands.get(targetCommand.toLowerCase())) return embedReply("Command non-existent", null, "warn");
     } else {
       if (!findTextCommand(client, targetCommand)) return embedReply("Command non-existent", null, "warn");
     }
@@ -75,6 +75,7 @@ module.exports = {
             guildId,
             commands: [targetCommand],
           });
+          embedReply(`Command '${targetCommand}' disabled`, "Successfully disabled command", "ok");
         } else {
           if (cachedServer.commands.includes(targetCommand)) return embedReply("Command already disabled", "Cannot disable already disabled command", "warn");
           client.disabledCommands.update({ guildId }, { $push: { commands: targetCommand } }, (servers) => {

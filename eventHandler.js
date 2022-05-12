@@ -4,6 +4,8 @@ const utils = require("./utils.js");
 async function initialize(client, eventsDir) {
   const events = utils.getAllFiles(eventsDir || "./events").filter((file) => file.endsWith(".js"));
 
+  client.events = [];
+
   for (let i = 0; i < events.length; i++) {
     const event = require(events[i]);
     try {
@@ -17,6 +19,8 @@ async function initialize(client, eventsDir) {
           console.error(err);
         }
       });
+
+      client.events.push(event.id);
     } catch (err) {
       console.error(err);
     }

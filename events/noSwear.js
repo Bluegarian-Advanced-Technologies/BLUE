@@ -11,7 +11,7 @@ module.exports = {
   execute: async (event, {}) => {
     if (event.author?.bot) return;
     if (swearWords.getAll().some((word) => event.content.toLowerCase().includes(word.word))) {
-      return event.reply({ content: "No swear No swear No swear No swear No swear" });
+      return event.reply({ content: "No swear" });
     }
   },
 };

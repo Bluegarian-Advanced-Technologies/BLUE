@@ -11,6 +11,7 @@ const registerCommand = require("./BACH/registerCommand");
 const LiveCollection = require("./classes/LiveCollection");
 
 const disabledCommands = require("./models/disabledCommands");
+const disabledEvents = require("./models/disabledEvents");
 
 async function initialize(client, config = {}) {
   const chalk = await import("chalk");
@@ -22,8 +23,16 @@ async function initialize(client, config = {}) {
   const slashCommandsPayload = [];
 
   client.commands = new Collection();
+
   client.disabledCommands = new LiveCollection(disabledCommands);
+  console.log("Initializing disabled commands...");
   await client.disabledCommands.init();
+  console.log("Done");
+
+  client.disabledEvents = new LiveCollection(disabledEvents);
+  console.log("Initializing disabled events...");
+  await client.disabledEvents.init();
+  console.log("Done");
 
   for (let i = 0; i < commands.length; i++) {
     const command = commands[i];
@@ -31,7 +40,7 @@ async function initialize(client, config = {}) {
     if (registration) slashCommandsPayload.push(registration.data.toJSON());
   }
 
-  const rest = new REST({ version: "9" }).setToken(process.env.TOKEN);
+  const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
   try {
     console.log("Started refreshing application (/) commands.");
@@ -61,7 +70,7 @@ async function initialize(client, config = {}) {
     if (!message.content.startsWith(prefix)) return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
-    const command = findTextCommand(args[0]);
+    const command = findTextCommand(args[0].toLowerCase());
     if (!command) return;
 
     function messageReply(content = "", ping = false, options = {}) {
@@ -81,6 +90,8 @@ async function initialize(client, config = {}) {
     }
 
     function embedMessageReply(title, text, status, ephemeral = false, options = {}) {
+      const { files } = options;
+
       const reply = {
         embeds: [embedMessage(title, text, status)],
         ephemeral,

@@ -7,7 +7,7 @@ class LiveCollection {
   }
 
   async init() {
-    const docs = await this.schema.find({});
+    const docs = await this.schema.find();
     this.values = docs;
   }
 
@@ -34,23 +34,25 @@ class LiveCollection {
     return document;
   }
   async update(filter, update, cb) {
-    const query = this.schema.findOneAndUpdate(filter, update);
+    const query = this.schema
+      .findOneAndUpdate(filter, update)
+      .exec()
+      .catch((err) => {
+        console.error(err);
+      });
 
     cb(this.values);
-
-    query.exec();
   }
 
-  async delete(query, cb) {
-    const document = await this.schema.findOneAndDelete(query);
+  async delete(filter, cb) {
+    const query = this.schema
+      .findOneAndDelete(filter)
+      .exec()
+      .catch((err) => {
+        console.error(err);
+      });
 
     cb(this.values);
-
-    // this.values = this.values.filter((g) =>
-    //   Object.keys(g)
-    //     .map((key) => query[key] === g[key])
-    //     .every((value) => value)
-    // );
   }
 }
 

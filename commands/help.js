@@ -1,7 +1,6 @@
 const { MessageEmbed } = require("discord.js");
 
-let isCached = false;
-let cachedHelpMenu;
+const commandCategories = [];
 
 module.exports = {
   id: "help",
@@ -17,12 +16,8 @@ module.exports = {
     },
   ],
 
-  execute: (cmd, { client, config }) => {
+  execute: (cmd, { client, reply, config }) => {
     const { colors, assets } = config;
-
-    if (isCached) {
-      return cmd.reply({ embeds: [cachedHelpMenu] });
-    }
 
     const helpEmbed = new MessageEmbed()
       .setColor(colors.primary)
@@ -34,16 +29,53 @@ module.exports = {
     client.commands.map((command) => {
       if (command.alias || command.hidden) return;
 
-      // TODO: Add expected args
+      if (commandCategories.length === 0) {
+        commandCategories.push({
+          category: command.category,
+          commands: [
+            {
+              id: command.id,
+              description: command.description,
+            },
+          ],
+        });
+      } else {
+        for (let i = 0; i < commandCategories.length; i++) {
+          const category = commandCategories[i];
 
-      helpEmbed.addField(`$ \`${command.id}\``, command.description);
+          if (category.category === command.category) {
+            category.commands.push({
+              id: command.id,
+              description: command.description,
+            });
+
+            return;
+          }
+        }
+
+        commandCategories.push({
+          category: command.category,
+          commands: [
+            {
+              id: command.id,
+              description: command.description,
+            },
+          ],
+        });
+      }
+
+      // TODO: Add expected args
     });
 
-    if (!isCached) {
-      isCached = true;
-      cachedHelpMenu = helpEmbed;
+    for (let i = 0; i < commandCategories.length; ++i) {
+      const category = commandCategories[i];
+
+      for (let o = 0; o < category.commands.length; o++) {
+        const command = category.commands[o];
+        helpEmbed.addField(`$ \`${command.id}\``, command.description);
+      }
     }
 
-    cmd.reply({ embeds: [helpEmbed], allowedMentions: [] });
+    reply(null, false, { embeds: [helpEmbed] });
   },
 };
