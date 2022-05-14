@@ -17,24 +17,52 @@ function registerCommand(client, cmd) {
   if (slash === "both" || slash === true) {
     command.data = new SlashCommandBuilder().setName(id).setDescription(description);
 
+    let isSubcommand = false;
+
     for (let i = 0; i < expectedArgs.length; i++) {
       try {
         const arg = expectedArgs[i];
-        const { type, name, required, description, options } = arg;
 
-        let dynamicOption = `add${type.charAt(0).toUpperCase() + type.toLowerCase().slice(1)}Option`;
-        expectedArgs[i].type = type.charAt(0).toUpperCase() + type.toLowerCase().slice(1);
+        if (isSubcommand || arg.type.toLowerCase() === "subcommand") {
+          isSubcommand = true;
 
-        command.data[dynamicOption]((option) => {
-          option
-            .setName(name.toLowerCase())
-            .setDescription(description)
-            .setRequired(required || false);
+          command.data.addSubcommand((subcommand) => {
+            subcommand.setName(arg.name.toLowerCase()).setDescription(arg.description);
+            for (let o = 0; o < arg.expectedArgs.length; o++) {
+              const subcommandArg = arg.expectedArgs[o];
+              const { type, name, required, description, options } = subcommandArg;
 
-          if (options) option.setChoices(...options);
+              let dynamicOption = `add${type.charAt(0).toUpperCase() + type.toLowerCase().slice(1)}Option`;
+              subcommandArg.type = type.charAt(0).toUpperCase() + type.toLowerCase().slice(1);
 
-          return option;
-        });
+              subcommand[dynamicOption]((option) => {
+                if (options) option.setChoices(...options);
+                return option
+                  .setName(name.toLowerCase())
+                  .setDescription(description)
+                  .setRequired(required || false);
+              });
+            }
+
+            return subcommand;
+          });
+        } else {
+          const { type, name, required, description, options } = arg;
+
+          let dynamicOption = `add${type.charAt(0).toUpperCase() + type.toLowerCase().slice(1)}Option`;
+          expectedArgs[i].type = type.charAt(0).toUpperCase() + type.toLowerCase().slice(1);
+
+          command.data[dynamicOption]((option) => {
+            option
+              .setName(name.toLowerCase())
+              .setDescription(description)
+              .setRequired(required || false);
+
+            if (options) option.setChoices(...options);
+
+            return option;
+          });
+        }
       } catch (err) {
         console.error(err);
       }

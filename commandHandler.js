@@ -218,6 +218,7 @@ async function initialize(client, config = {}) {
     if (!interaction.isCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
+
     if (!command) return;
 
     function interactionReply(content = "", ephemeral = false, options = {}) {
@@ -235,6 +236,8 @@ async function initialize(client, config = {}) {
     }
 
     function embedInteractionReply(title, text, status, ephemeral = false, options = {}) {
+      const { files } = options;
+
       const reply = {
         embeds: [embedMessage(title, text, status)],
         ephemeral,

@@ -5,6 +5,7 @@ module.exports = {
   aliases: [],
   slash: "both",
   hidden: true,
+  elevation: 5,
   expectedArgs: [
     {
       type: "String",
