@@ -1,5 +1,3 @@
-const LiveCollection = require("../../classes/LiveCollection");
-
 module.exports = {
   id: "user",
   description: "Configure users",
@@ -59,15 +57,11 @@ module.exports = {
     },
   ],
 
-  init: () => {
-    
-  },
-
   execute: (cmd, { client, channel, args, subcommand, embedReply }) => {
     switch (subcommand)
     {
       case "elevation":
-
+        
       break;
       case "blacklist":
 

@@ -12,12 +12,13 @@ const LiveCollection = require("./classes/LiveCollection");
 
 const disabledCommands = require("./models/disabledCommands");
 const disabledEvents = require("./models/disabledEvents");
+const users = require("./models/users")
 
 async function initialize(client, config = {}) {
   const chalk = await import("chalk");
   const { prefix, commandsDir } = config;
 
-  console.log(chalk.default.blue("\nStarting Bluegarian Advanced Command Handler..."));
+  console.log(chalk.default.blue("Starting Bluegarian Advanced Command Handler..."));
 
   const commands = utils.getAllFiles(commandsDir || "./commands").filter((file) => file.endsWith(".js"));
   const slashCommandsPayload = [];
@@ -34,9 +35,14 @@ async function initialize(client, config = {}) {
   await client.disabledEvents.init();
   console.log("Done");
 
+  client.users = new LiveCollection(users);
+  console.log("Initializing users...");
+  await client.users.init();
+  console.log("Done");
+
   for (let i = 0; i < commands.length; i++) {
     const command = commands[i];
-    const registration = registerCommand.register(client, command);
+    const registration = await registerCommand.register(client, command);
     if (registration) slashCommandsPayload.push(registration.data.toJSON());
   }
 
@@ -69,9 +75,13 @@ async function initialize(client, config = {}) {
       return client.commands.get("help").execute(message, { client, config: botConfig });
     if (!message.content.startsWith(prefix)) return;
 
+    const user = client.users.find((userObj) => userObj.userId === message.author.id);
+
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
     const command = findTextCommand(args[0].toLowerCase());
     if (!command) return;
+
+    // if (command.elevation && command.elevation < )
 
     function messageReply(content = "", ping = false, options = {}) {
       const { embeds, files, tts } = options;

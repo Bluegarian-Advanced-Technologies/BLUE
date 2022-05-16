@@ -7,7 +7,7 @@ Object.keys(Permissions.FLAGS).map((permission) => {
   permissionsList.push(permission);
 });
 
-function registerCommand(client, cmd) {
+async function registerCommand(client, cmd) {
   const command = require(cmd);
 
   if (command.notCommand) return false;
@@ -93,7 +93,7 @@ function registerCommand(client, cmd) {
 
   console.log(`Module '${id}' of ${command?.category ? command.category : ""} ready`);
 
-  if (command.init) command.init({ client });
+  if (command.init) await command.init({ client });
 
   return command;
 }
