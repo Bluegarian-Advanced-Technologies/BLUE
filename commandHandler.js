@@ -89,12 +89,14 @@ async function initialize(client, config = {}) {
       message.reply(reply);
     }
 
-    function embedMessageReply(title, text, status, ephemeral = false, options = {}) {
+    function embedMessageReply(title, text, status, ping = false, options = {}) {
       const { files } = options;
 
       const reply = {
         embeds: [embedMessage(title, text, status)],
-        ephemeral,
+        allowedMentions: {
+          repliedUser: ping,
+        },
       };
 
       if (files) reply.files = files;
@@ -111,20 +113,7 @@ async function initialize(client, config = {}) {
 
     args.shift();
 
-    // Validate args
-    const validationResult = command.expectedArgs.map((expectedArg, i) => {
-      if (!expectedArg.required) return;
-      if (!args[i]) return new Error(`${expectedArg.name} is required`);
-      if (expectedArg.options) {
-        const optionsList = [];
-
-        for (let o = 0, n = expectedArg.options.length; o < n; ++o) {
-          if (expectedArg.options[o].name.toLowerCase() === args[i].toLowerCase()) return (args[i] = expectedArg.options[o].value);
-          optionsList.push(expectedArg.options[o].name);
-        }
-        return new Error(`Not ${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`);
-      }
-
+    function validateArg(expectedArg, i) {
       switch (expectedArg.type.toLowerCase()) {
         case "string": {
           return true;
@@ -184,7 +173,51 @@ async function initialize(client, config = {}) {
           return new Error(`Invalid arg type at argument ${i + 1}: ${expectedArg.name}`);
         }
       }
-    });
+    }
+
+    let subcommand = args[0]?.toLowerCase();
+
+    function validateSubcommand(subcommandRaw) {
+      if (subcommandRaw == null)
+        return [
+          new Error(`Unknown sub command, expected ${command.expectedArgs.reduce((total, value) => (total += value.name + "|"), command.expectedArgs[0])}`),
+        ];
+      const result = subcommandRaw.expectedArgs.map((expectedArg, i) => {
+        if (!expectedArg.required) return;
+        if (!args[i]) return new Error(`${expectedArg.name} is required`);
+        if (expectedArg.options) {
+          const optionsList = [];
+
+          for (let o = 0, n = expectedArg.options.length; o < n; ++o) {
+            if (expectedArg.options[o].name.toLowerCase() === args[i].toLowerCase()) return (args[i] = expectedArg.options[o].value);
+            optionsList.push(expectedArg.options[o].name);
+          }
+          return new Error(`Not ${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`);
+        }
+
+        validateArg(expectedArg, i + 1);
+      });
+
+      return result;
+    }
+
+    const validationResult = command.subcommanded
+      ? validateSubcommand(command.expectedArgs.find((subcommandRaw) => subcommandRaw.name === subcommand))
+      : command.expectedArgs.map((expectedArg, i) => {
+          if (!expectedArg.required) return;
+          if (!args[i]) return new Error(`${expectedArg.name} is required`);
+          if (expectedArg.options) {
+            const optionsList = [];
+
+            for (let o = 0, n = expectedArg.options.length; o < n; ++o) {
+              if (expectedArg.options[o].name.toLowerCase() === args[i].toLowerCase()) return (args[i] = expectedArg.options[o].value);
+              optionsList.push(expectedArg.options[o].name);
+            }
+            return new Error(`Not ${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`);
+          }
+
+          return validateArg(expectedArg, i);
+        });
 
     for (const a of validationResult) {
       if (a instanceof Error) {
@@ -202,6 +235,7 @@ async function initialize(client, config = {}) {
       channelId: message.channelId,
       permissions: message,
       isInteraction: false,
+      subcommand,
       reply: messageReply,
       embedReply: embedMessageReply,
       args,
@@ -258,9 +292,19 @@ async function initialize(client, config = {}) {
     const args = [];
 
     for (const arg of command.expectedArgs) {
-      const interactionOption = interaction.options.get(arg.name);
-      if (!arg.required && !interactionOption) continue;
-      args.push(interactionOption.value);
+      let interactionOption;
+
+      if (!command.subcommanded) {
+        interactionOption = interaction.options.get(arg.name);
+        if (!arg.required && !interactionOption) continue;
+        args.push(interactionOption.value);
+      } else {
+        for (const subarg of arg.expectedArgs) {
+          interactionOption = interaction.options["get" + subarg.type](subarg.name);
+          if (!arg.required && !interactionOption) continue;
+          args.push(interactionOption);
+        }
+      }
     }
 
     const props = {
@@ -272,6 +316,7 @@ async function initialize(client, config = {}) {
       channel: interaction.channel,
       channelId: interaction.channelId,
       isInteraction: true,
+      subcommand: command.getSubcommand(),
       reply: interactionReply,
       embedReply: embedInteractionReply,
       args,

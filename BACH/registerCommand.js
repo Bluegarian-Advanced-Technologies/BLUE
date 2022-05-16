@@ -25,6 +25,7 @@ function registerCommand(client, cmd) {
 
         if (isSubcommand || arg.type.toLowerCase() === "subcommand") {
           isSubcommand = true;
+          command.subcommanded = true;
 
           command.data.addSubcommand((subcommand) => {
             subcommand.setName(arg.name.toLowerCase()).setDescription(arg.description);

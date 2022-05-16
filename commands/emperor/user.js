@@ -58,7 +58,7 @@ module.exports = {
   ],
 
   execute: (cmd, { client, channel, args, embedReply }) => {
-    console.log(cmd.options);
+    console.log(args);
 
     embedReply("Done", "Check console");
   },
