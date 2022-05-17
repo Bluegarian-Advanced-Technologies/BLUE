@@ -57,15 +57,27 @@ module.exports = {
     },
   ],
 
-  execute: (cmd, { client, channel, args, subcommand, embedReply }) => {
-    switch (subcommand)
-    {
-      case "elevation":
-        
-      break;
-      case "blacklist":
+  execute: async (cmd, { client, channel, args, subcommand, embedReply }) => {
+    const users = client.BACH.users;
 
-      break;
+    switch (subcommand) {
+      case "elevation": {
+        const targetUser = args[0];
+        const targetElevation = args[1];
+
+        if (users.getAll().find((u) => u.userId === targetUser)) {
+          users.set({
+            userId: targetUser,
+            elevation: targetElevation,
+          });
+        } else {
+          users.update({ userId: targetUser }, { elevation: targetElevation }, (cache) => {
+            return;
+          });
+        }
+      }
+      case "blacklist": {
+      }
     }
 
     embedReply("Done", "Check console");

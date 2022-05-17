@@ -211,6 +211,8 @@ async function initialize(client, config = {}) {
         validateArg(expectedArg, i + 1);
       });
 
+      args.shift();
+
       return result;
     }
 
@@ -320,6 +322,7 @@ async function initialize(client, config = {}) {
         for (const subarg of arg.expectedArgs) {
           interactionOption = interaction.options["get" + subarg.type](subarg.name);
           if (!arg.required && !interactionOption) continue;
+          args.shift();
           args.push(interactionOption);
         }
       }
