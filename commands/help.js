@@ -26,7 +26,7 @@ module.exports = {
       .setTimestamp()
       .setFooter({ text: "Bluegarian Logistics Universal Emulator: BLUE" });
 
-    client.commands.map((command) => {
+    client.BACH.commands.map((command) => {
       if (command.alias || command.hidden) return;
 
       if (commandCategories.length === 0) {

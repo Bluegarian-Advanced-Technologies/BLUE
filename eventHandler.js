@@ -13,7 +13,7 @@ async function initialize(client, eventsDir) {
       if (event.once) on = "once";
 
       client[on](event.eventType, (eventData) => {
-        const guildDisabledEvents = client.disabledEvents.getAll().find((doc) => doc.guildId === eventData.guildId);
+        const guildDisabledEvents = client.BACH.disabledEvents.getAll().find((doc) => doc.guildId === eventData.guildId);
         if (guildDisabledEvents && guildDisabledEvents.events.includes(event.id)) return;
 
         try {

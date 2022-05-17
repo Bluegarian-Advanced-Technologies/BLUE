@@ -38,13 +38,13 @@ module.exports = {
 
     if (!client.events.find((event) => event === targetEvent)) return embedReply("Event non-existent", null, "warn");
 
-    const cachedServer = client.disabledEvents.getAll().find((doc) => doc.guildId === guildId);
+    const cachedServer = client.BACH.disabledEvents.getAll().find((doc) => doc.guildId === guildId);
 
     switch (args[0]) {
       case "on":
         if (!cachedServer || !cachedServer.events.includes(targetEvent)) return embedReply("Event not disabled", "Cannot enable already enabled event", "warn");
 
-        client.disabledEvents.update({ guildId }, { $pull: { events: targetEvent } }, (servers) => {
+        client.BACH.disabledEvents.update({ guildId }, { $pull: { events: targetEvent } }, (servers) => {
           const targetServer = servers.find((server) => server.guildId === guildId);
 
           for (let i = 0; i < targetServer.events.length; ++i) {
@@ -60,7 +60,7 @@ module.exports = {
         break;
       case "off":
         if (!cachedServer) {
-          client.disabledEvents.set({
+          client.BACH.disabledEvents.set({
             guildId,
             events: [targetEvent],
           });
@@ -68,7 +68,7 @@ module.exports = {
           embedReply(`Event '${targetEvent}' disabled`, "Successfully disabled event", "ok");
         } else {
           if (cachedServer.events.includes(targetEvent)) return embedReply("Event already disabled", "Cannot disable already disabled event", "warn");
-          client.disabledEvents.update({ guildId }, { $push: { events: targetEvent } }, (servers) => {
+          client.BACH.disabledEvents.update({ guildId }, { $push: { events: targetEvent } }, (servers) => {
             servers.find((server) => server.guildId === guildId).events.push(targetEvent);
           });
 

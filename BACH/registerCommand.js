@@ -83,13 +83,13 @@ async function registerCommand(client, cmd) {
   for (let i = 0; i < aliases.length; i++) {
     const alias = aliases[i];
 
-    client.commands.set(alias, {
+    client.BACH.commands.set(alias, {
       alias: true,
       cmdName: id,
     });
   }
 
-  client.commands.set(id, command);
+  client.BACH.commands.set(id, command);
 
   console.log(`Module '${id}' of ${command?.category ? command.category : ""} ready`);
 

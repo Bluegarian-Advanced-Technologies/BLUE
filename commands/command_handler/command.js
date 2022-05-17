@@ -1,8 +1,8 @@
 const { embedMessage } = require("../../utils");
 
 function findTextCommand(client, cmd) {
-  const query = client.commands.get(cmd);
-  if (query?.alias) return client.commands.get(query.cmdName);
+  const query = client.BACH.commands.get(cmd);
+  if (query?.alias) return client.BACH.commands.get(query.cmdName);
   return query;
 }
 
@@ -43,19 +43,19 @@ module.exports = {
     const targetCommand = args[1].toLowerCase();
 
     if (isInteraction) {
-      if (!client.commands.get(targetCommand.toLowerCase())) return embedReply("Command non-existent", null, "warn");
+      if (!client.BACH.commands.get(targetCommand.toLowerCase())) return embedReply("Command non-existent", null, "warn");
     } else {
       if (!findTextCommand(client, targetCommand)) return embedReply("Command non-existent", null, "warn");
     }
 
-    const cachedServer = client.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
+    const cachedServer = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
 
     switch (args[0]) {
       case "on":
         if (!cachedServer || !cachedServer.commands.includes(targetCommand))
           return embedReply("Command not disabled", "Cannot enable already enabled command", "warn");
 
-        client.disabledCommands.update({ guildId }, { $pull: { commands: targetCommand } }, (servers) => {
+        client.BACH.disabledCommands.update({ guildId }, { $pull: { commands: targetCommand } }, (servers) => {
           const targetServer = servers.find((server) => server.guildId === guildId);
 
           for (let i = 0; i < targetServer.commands.length; ++i) {
@@ -71,14 +71,14 @@ module.exports = {
         break;
       case "off":
         if (!cachedServer) {
-          client.disabledCommands.set({
+          client.BACH.disabledCommands.set({
             guildId,
             commands: [targetCommand],
           });
           embedReply(`Command '${targetCommand}' disabled`, "Successfully disabled command", "ok");
         } else {
           if (cachedServer.commands.includes(targetCommand)) return embedReply("Command already disabled", "Cannot disable already disabled command", "warn");
-          client.disabledCommands.update({ guildId }, { $push: { commands: targetCommand } }, (servers) => {
+          client.BACH.disabledCommands.update({ guildId }, { $push: { commands: targetCommand } }, (servers) => {
             servers.find((server) => server.guildId === guildId).commands.push(targetCommand);
           });
 

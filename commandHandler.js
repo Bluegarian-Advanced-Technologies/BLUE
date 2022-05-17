@@ -12,7 +12,7 @@ const LiveCollection = require("./classes/LiveCollection");
 
 const disabledCommands = require("./models/disabledCommands");
 const disabledEvents = require("./models/disabledEvents");
-const users = require("./models/users")
+const users = require("./models/users");
 
 async function initialize(client, config = {}) {
   const chalk = await import("chalk");
@@ -23,21 +23,23 @@ async function initialize(client, config = {}) {
   const commands = utils.getAllFiles(commandsDir || "./commands").filter((file) => file.endsWith(".js"));
   const slashCommandsPayload = [];
 
-  client.commands = new Collection();
+  client.BACH = {};
 
-  client.disabledCommands = new LiveCollection(disabledCommands);
+  client.BACH.commands = new Collection();
+
+  client.BACH.disabledCommands = new LiveCollection(disabledCommands);
   console.log("Initializing disabled commands...");
-  await client.disabledCommands.init();
+  await client.BACH.disabledCommands.init();
   console.log("Done");
 
-  client.disabledEvents = new LiveCollection(disabledEvents);
+  client.BACH.disabledEvents = new LiveCollection(disabledEvents);
   console.log("Initializing disabled events...");
-  await client.disabledEvents.init();
+  await client.BACH.disabledEvents.init();
   console.log("Done");
 
-  client.users = new LiveCollection(users);
+  client.BACH.users = new LiveCollection(users);
   console.log("Initializing users...");
-  await client.users.init();
+  await client.BACH.users.init();
   console.log("Done");
 
   for (let i = 0; i < commands.length; i++) {
@@ -64,24 +66,22 @@ async function initialize(client, config = {}) {
   }
 
   function findTextCommand(cmd) {
-    const query = client.commands.get(cmd);
-    if (query?.alias) return client.commands.get(query.cmdName);
+    const query = client.BACH.commands.get(cmd);
+    if (query?.alias) return client.BACH.commands.get(query.cmdName);
     return query;
   }
 
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
     if (message.content.startsWith(`<@${client.user.id}>`) || message.content.startsWith(`<@!${client.user.id}>`))
-      return client.commands.get("help").execute(message, { client, config: botConfig });
+      return client.BACH.commands.get("help").execute(message, { client, config: botConfig });
     if (!message.content.startsWith(prefix)) return;
 
-    const user = client.users.find((userObj) => userObj.userId === message.author.id);
+    const user = client.BACH.users.getAll().find((userObj) => userObj.userId === message.author.id);
 
     const args = message.content.slice(prefix.length).trim().split(/ +/g);
     const command = findTextCommand(args[0].toLowerCase());
     if (!command) return;
-
-    // if (command.elevation && command.elevation < )
 
     function messageReply(content = "", ping = false, options = {}) {
       const { embeds, files, tts } = options;
@@ -114,7 +114,10 @@ async function initialize(client, config = {}) {
       message.reply(reply);
     }
 
-    const guildDisabledCommands = client.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
+    if (command.elevation && command.elevation > (user?.elevation || 1))
+      return embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
+
+    const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
     if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id))
       return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
 
@@ -261,9 +264,11 @@ async function initialize(client, config = {}) {
   client.on("interactionCreate", async (interaction) => {
     if (!interaction.isCommand()) return;
 
-    const command = client.commands.get(interaction.commandName);
+    const command = client.BACH.commands.get(interaction.commandName);
 
     if (!command) return;
+
+    const user = client.BACH.users.getAll().find((userObj) => userObj.userId === interaction.user.id);
 
     function interactionReply(content = "", ephemeral = false, options = {}) {
       const { embeds, files, tts } = options;
@@ -292,7 +297,10 @@ async function initialize(client, config = {}) {
       interaction.reply(reply);
     }
 
-    const guildDisabledCommands = client.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
+    if (command.elevation && command.elevation > (user?.elevation || 1))
+      return embedInteractionReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
+
+    const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
     if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id))
       return embedInteractionReply("Command Disabled", "This command is disabled in the server", "error");
 
@@ -326,7 +334,7 @@ async function initialize(client, config = {}) {
       channel: interaction.channel,
       channelId: interaction.channelId,
       isInteraction: true,
-      subcommand: command.getSubcommand(),
+      subcommand: interaction.options.getSubcommand(),
       reply: interactionReply,
       embedReply: embedInteractionReply,
       args,
