@@ -12,6 +12,7 @@ module.exports = {
   category: "Moderation",
   slash: "both",
   aliases: [],
+  disableExempted: true,
   expectedArgs: [
     {
       type: "String",
@@ -47,6 +48,8 @@ module.exports = {
     } else {
       if (!findTextCommand(client, targetCommand)) return embedReply("Command non-existent", null, "warn");
     }
+
+    if (targetCommand.disableExempted) return embedReply("Cannot disable command", "This command is exempted from being disabled.", "error");
 
     const cachedServer = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
 

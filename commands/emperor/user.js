@@ -57,22 +57,31 @@ module.exports = {
     },
   ],
 
-  execute: async (cmd, { client, channel, args, subcommand, embedReply }) => {
+  execute: async (cmd, { client, channel, args, subcommand, isInteraction, embedReply }) => {
     const users = client.BACH.users;
+
+    let dynamicUser;
+    if (isInteraction) {
+      dynamicUser = args[0].id;
+    } else {
+      dynamicUser = args[0][1];
+    }
+    const targetUser = dynamicUser;
 
     switch (subcommand) {
       case "elevation": {
-        const targetUser = args[0];
         const targetElevation = args[1];
 
+        if (targetUser === client.application.owner.id) return embedReply("Access Denied", "The Emperor's elevation cannot be changed.", "error");
+
         if (users.getAll().find((u) => u.userId === targetUser)) {
+          users.update({ userId: targetUser }, { elevation: targetElevation }, (cache) => {
+            return (cache.find((cachedUser) => cachedUser.userId === targetUser).elevation = targetElevation);
+          });
+        } else {
           users.set({
             userId: targetUser,
             elevation: targetElevation,
-          });
-        } else {
-          users.update({ userId: targetUser }, { elevation: targetElevation }, (cache) => {
-            return;
           });
         }
       }

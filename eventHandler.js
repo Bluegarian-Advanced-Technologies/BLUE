@@ -4,7 +4,7 @@ const utils = require("./utils.js");
 async function initialize(client, eventsDir) {
   const events = utils.getAllFiles(eventsDir || "./events").filter((file) => file.endsWith(".js"));
 
-  client.events = [];
+  client.BACH.events = [];
 
   for (let i = 0; i < events.length; i++) {
     const event = require(events[i]);
@@ -23,7 +23,7 @@ async function initialize(client, eventsDir) {
         }
       });
 
-      client.events.push(event.id);
+      client.BACH.events.push(event.id);
     } catch (err) {
       console.error(err);
     }

@@ -244,7 +244,7 @@ async function initialize(client, config = {}) {
       client,
       config: botConfig,
       guildId: message.guildId,
-      user: message.user,
+      user: message.author,
       member: message.member,
       channel: message.channel,
       channelId: message.channelId,
@@ -269,6 +269,12 @@ async function initialize(client, config = {}) {
     const command = client.BACH.commands.get(interaction.commandName);
 
     if (!command) return;
+
+    let subcommand;
+
+    if (command.subcommanded) {
+      subcommand = interaction.options.getSubcommand();
+    }
 
     const user = client.BACH.users.getAll().find((userObj) => userObj.userId === interaction.user.id);
 
@@ -311,20 +317,26 @@ async function initialize(client, config = {}) {
 
     const args = [];
 
+    function subargParse(arg) {
+      for (const subarg of arg.expectedArgs) {
+        let interactionOption;
+        interactionOption = interaction.options["get" + subarg.type](subarg.name);
+        if (!arg.required && !interactionOption) continue;
+        args.push(interactionOption);
+      }
+    }
+
     for (const arg of command.expectedArgs) {
       let interactionOption;
 
-      if (!command.subcommanded) {
+      if (command.subcommanded == null) {
         interactionOption = interaction.options.get(arg.name);
         if (!arg.required && !interactionOption) continue;
         args.push(interactionOption.value);
       } else {
-        for (const subarg of arg.expectedArgs) {
-          interactionOption = interaction.options["get" + subarg.type](subarg.name);
-          if (!arg.required && !interactionOption) continue;
-          args.shift();
-          args.push(interactionOption);
-        }
+        if (arg.name !== subcommand) continue;
+        subargParse(arg);
+        break;
       }
     }
 
@@ -337,7 +349,7 @@ async function initialize(client, config = {}) {
       channel: interaction.channel,
       channelId: interaction.channelId,
       isInteraction: true,
-      subcommand: interaction.options.getSubcommand(),
+      subcommand,
       reply: interactionReply,
       embedReply: embedInteractionReply,
       args,
