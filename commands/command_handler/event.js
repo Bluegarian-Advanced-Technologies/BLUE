@@ -37,8 +37,10 @@ module.exports = {
   execute: async (cmd, { client, guildId, embedReply, args }) => {
     const targetEvent = args[1].toLowerCase();
 
-    if (!client.BACH.events.find((event) => event === targetEvent)) return embedReply("Event non-existent", null, "warn");
-    if (targetCommand.disableExempted) return embedReply("Cannot disable command", "This command is exempted from being disabled.", "error");
+    let event = client.BACH.events.find((event) => event === targetEvent);
+
+    if (!event) return embedReply("Event non-existent", null, "warn");
+    if (event.disableExempted) return embedReply("Cannot disable event", "This event is exempted from being disabled.", "error");
 
     const cachedServer = client.BACH.disabledEvents.getAll().find((doc) => doc.guildId === guildId);
 

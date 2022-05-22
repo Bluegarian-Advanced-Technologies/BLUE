@@ -43,13 +43,17 @@ module.exports = {
   execute: async (cmd, { client, guildId, isInteraction, channel, embedReply, args }) => {
     const targetCommand = args[1].toLowerCase();
 
+    let command;
+
     if (isInteraction) {
-      if (!client.BACH.commands.get(targetCommand.toLowerCase())) return embedReply("Command non-existent", null, "warn");
+      command = client.BACH.commands.get(targetCommand.toLowerCase());
+      if (!command) return embedReply("Command non-existent", null, "warn");
     } else {
-      if (!findTextCommand(client, targetCommand)) return embedReply("Command non-existent", null, "warn");
+      command = findTextCommand(client, targetCommand);
+      if (!command) return embedReply("Command non-existent", null, "warn");
     }
 
-    if (targetCommand.disableExempted) return embedReply("Cannot disable command", "This command is exempted from being disabled.", "error");
+    if (command.disableExempted) return embedReply("Cannot disable command", "This command is exempted from being disabled.", "error");
 
     const cachedServer = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
 
