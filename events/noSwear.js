@@ -4,7 +4,7 @@ const swearWord = require("../models/swearWord.js");
 const swearWords = new LiveCollection(swearWord);
 
 module.exports = {
-  id: "noSwear",
+  id: "noswear",
   once: false,
   eventType: "messageCreate",
 

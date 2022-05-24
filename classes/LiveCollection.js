@@ -29,6 +29,8 @@ class LiveCollection {
     const document = new this.schema(value);
     this.values.push(document);
 
+    console.log(document);
+
     document.save();
 
     return document;

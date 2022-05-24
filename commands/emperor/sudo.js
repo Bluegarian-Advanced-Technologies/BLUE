@@ -6,6 +6,7 @@ module.exports = {
   slash: "both",
   hidden: true,
   elevation: 5,
+  disableExempted: true,
   expectedArgs: [
     {
       type: "String",

@@ -6,6 +6,7 @@ module.exports = {
   slash: "both",
   hidden: true,
   elevation: 5,
+  disableExempted: true,
   expectedArgs: [
     {
       type: "Subcommand",
@@ -22,6 +23,8 @@ module.exports = {
           type: "Integer",
           name: "_elevation",
           description: "Desired elevation 0-5",
+          min: 0,
+          max: 5,
           required: true,
         },
       ],
@@ -57,7 +60,7 @@ module.exports = {
     },
   ],
 
-  execute: async (cmd, { client, channel, args, subcommand, isInteraction, embedReply }) => {
+  execute: async (cmd, { client, channel, user, args, subcommand, isInteraction, embedReply }) => {
     const users = client.BACH.users;
 
     let dynamicUser;
@@ -72,7 +75,15 @@ module.exports = {
       case "elevation": {
         const targetElevation = args[1];
 
-        if (targetUser === client.application.owner.id) return embedReply("Access Denied", "The Emperor's elevation cannot be changed.", "error");
+        if (targetUser === client.application.owner.id) {
+          if (user.id === client.application.owner.id)
+            return embedReply(
+              "Apologies my Emperor",
+              "Your almighty highness will prevail for eternity: as such, I will not attempt to change your elevation.",
+              "warn"
+            );
+          return embedReply("Access Denied", "The Emperor's elevation cannot be changed.", "error");
+        }
 
         if (users.getAll().find((u) => u.userId === targetUser)) {
           users.update({ userId: targetUser }, { elevation: targetElevation }, (cache) => {
@@ -84,11 +95,11 @@ module.exports = {
             elevation: targetElevation,
           });
         }
+
+        embedReply("User updated", `Successfully updated user elevation to ${targetElevation}`, "ok");
       }
       case "blacklist": {
       }
     }
-
-    embedReply("Done", "Check console");
   },
 };

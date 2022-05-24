@@ -8,7 +8,7 @@ const disabledEvent = mongoose.Schema({
 
   events: {
     type: Array,
-    default: [],
+    default: [String],
     required: false,
   },
 });

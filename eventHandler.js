@@ -1,10 +1,12 @@
 const config = require("./config.json");
 const utils = require("./utils.js");
 
+const { Collection } = require("discord.js");
+
 async function initialize(client, eventsDir) {
   const events = utils.getAllFiles(eventsDir || "./events").filter((file) => file.endsWith(".js"));
 
-  client.BACH.events = [];
+  client.BACH.events = new Collection();
 
   for (let i = 0; i < events.length; i++) {
     const event = require(events[i]);
@@ -23,7 +25,7 @@ async function initialize(client, eventsDir) {
         }
       });
 
-      client.BACH.events.push(event.id);
+      client.BACH.events.set(event.id.toLowerCase(), event);
     } catch (err) {
       console.error(err);
     }

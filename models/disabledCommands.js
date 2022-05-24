@@ -8,7 +8,7 @@ const disabledCommand = mongoose.Schema({
 
   commands: {
     type: Array,
-    default: [],
+    default: [String],
     required: false,
   },
 });

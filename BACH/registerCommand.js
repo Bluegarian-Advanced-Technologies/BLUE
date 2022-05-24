@@ -11,6 +11,9 @@ async function registerCommand(client, cmd) {
   const command = require(cmd);
 
   if (command.notCommand) return false;
+  if (command.elevation == null) {
+    command.elevation = 1;
+  }
 
   const { id, description, aliases, slash, expectedArgs } = command;
 
@@ -38,6 +41,12 @@ async function registerCommand(client, cmd) {
 
               subcommand[dynamicOption]((option) => {
                 if (options) option.setChoices(...options);
+
+                if (subcommandArg.type === "Integer" || subcommandArg.type === "Number") {
+                  if (subcommandArg?.min) option.min_value = subcommandArg.min;
+                  if (subcommandArg?.max) option.max_value = subcommandArg.max;
+                }
+
                 return option
                   .setName(name.toLowerCase())
                   .setDescription(description)
@@ -58,6 +67,11 @@ async function registerCommand(client, cmd) {
               .setName(name.toLowerCase())
               .setDescription(description)
               .setRequired(required || false);
+
+            if (expectedArgs[i].type === "Integer" || expectedArgs[i].type === "Number") {
+              if (expectedArgs[i]?.min) option.min_value = expectedArgs[i].min;
+              if (expectedArgs[i]?.max) option.max_value = expectedArgs[i].max;
+            }
 
             if (options) option.setChoices(...options);
 

@@ -1,7 +1,5 @@
 const { MessageEmbed } = require("discord.js");
 
-const commandCategories = [];
-
 module.exports = {
   id: "help",
   description: "Display BLUE's help menu",
@@ -18,6 +16,7 @@ module.exports = {
 
   execute: (cmd, { client, reply, config }) => {
     const { colors, assets } = config;
+    const commandCategories = [];
 
     const helpEmbed = new MessageEmbed()
       .setColor(colors.primary)
@@ -75,6 +74,8 @@ module.exports = {
         helpEmbed.addField(`$ \`${command.id}\``, command.description);
       }
     }
+
+    console.log(commandCategories);
 
     reply(null, false, { embeds: [helpEmbed] });
   },
