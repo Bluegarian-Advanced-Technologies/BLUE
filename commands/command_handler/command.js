@@ -168,7 +168,10 @@ module.exports = {
 
         if (isInteraction) {
           dynamicChannel = args[1].id;
+          if (!args[1].isText())
+            return embedReply("Not a Text Channel", "Channel categories are not supported yet, please select a text channel based channel instead.", "warn");
         } else {
+          console.log(args[1]);
           dynamicChannel = args[1][1];
         }
 
