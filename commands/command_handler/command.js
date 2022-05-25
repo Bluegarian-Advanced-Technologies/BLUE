@@ -56,11 +56,11 @@ module.exports = {
           options: [
             {
               name: "Restrict",
-              value: "off",
+              value: "res",
             },
             {
               name: "Unrestrict",
-              value: "on",
+              value: "unres",
             },
           ],
         },
@@ -159,6 +159,8 @@ module.exports = {
           default:
             reply("bruh");
         }
+
+        break;
       }
 
       case "channelonly": {
@@ -180,27 +182,39 @@ module.exports = {
         const cachedServer = client.BACH.restrictedChannels.getAll().find((server) => server.guildId === guildId);
 
         switch (args[0]) {
-          case "on": {
+          case "unres": {
             if (cachedServer == null) return embedReply("No restricted command channels", null, "warn");
 
-            client.BACH.restrictedChannels.update({ guildId, channels: { $elemMatch: {} } }, { $pull: { "channels.$.commands": targetCommand } }, (cache) => {
-              const channels = cache.find((server) => server.guildId === guildId).channels;
+            client.BACH.restrictedChannels.update(
+              null,
+              null,
+              (cache) => {
+                const server = cache.find((server) => server.guildId === guildId);
+                const channels = server.channels;
 
-              for (const channel of channels) {
-                if (channel.channel === targetChannel) {
-                  for (let i = 0; i < channel.commands.length; ++i) {
-                    if (channel.commands[i] === targetCommand) {
-                      channel.commands.splice(i, 1);
-                      break;
+                for (const channel of channels) {
+                  if (channel.channel === targetChannel) {
+                    if (!channel.commands.includes(targetCommand))
+                      return embedReply("Command not restricted", "This command is not restricted to this channel yet.", "warn");
+                    for (let i = 0; i < channel.commands.length; ++i) {
+                      if (channel.commands[i] === targetCommand) {
+                        channel.commands.splice(i, 1);
+
+                        server.markModified("channels");
+                        server.save();
+
+                        embedReply("Successfully completed", `Unrestricted *${targetCommand}* from <#${targetChannel}>.`, "ok");
+                        return;
+                      }
                     }
                   }
-                  return;
                 }
-              }
-            });
+              },
+              true
+            );
+            break;
           }
-
-          case "off": {
+          case "res": {
             if (cachedServer == null) {
               client.BACH.restrictedChannels.set({
                 guildId,
@@ -213,25 +227,39 @@ module.exports = {
               });
             } else {
               client.BACH.restrictedChannels.update(
-                { guildId, "channels.$.channel": targetChannel },
-                { $push: { "channels.$.commands": targetCommand } },
+                null,
+                null,
                 (cache) => {
-                  const channels = cache.find((server) => server.guildId === guildId).channels;
+                  const server = cache.find((server) => server.guildId === guildId);
+                  const channels = server.channels;
 
                   for (const channel of channels) {
                     if (channel.channel === targetChannel) {
-                      return channel.commands.push(targetCommand);
+                      if (channel.commands.includes(targetCommand))
+                        return embedReply("Command already restricted", "This command is already restricted to the channel.", "warn");
+                      channel.commands.push(targetCommand);
+
+                      server.markModified("channels");
+                      server.save();
+
+                      embedReply("Successfully completed", `Restricted *${targetCommand}* to <#${targetChannel}>.`, "ok");
+
+                      return;
                     }
                   }
 
                   client.BACH.restrictedChannels.update({ guildId }, { $push: { channels: { channel: targetChannel, commands: [targetCommand] } } }, () => {
                     channels.push({ channel: targetChannel, commands: [targetCommand] });
                   });
-                }
+
+                  embedReply("Successfully completed", `Restricted *${targetCommand}* to <#${targetChannel}>.`, "ok");
+                },
+                true
               );
             }
           }
         }
+        break;
       }
 
       case "requiredrole": {

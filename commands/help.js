@@ -21,7 +21,7 @@ module.exports = {
     const helpEmbed = new MessageEmbed()
       .setColor(colors.primary)
       .setAuthor({ name: "BLUE Help Center", iconURL: assets.icon })
-      .setDescription(`Command options wrapped in \`<>\` are **required**, while \`[]\` are **optional**. All commands have their (**/**) varients.\n`)
+      .setDescription(`Command options wrapped in \`<>\` are **required**, whilst \`[]\` are **optional**. All commands have their (**/**) varients.\n`)
       .setTimestamp()
       .setFooter({ text: "Bluegarian Logistics Universal Emulator: BLUE" });
 

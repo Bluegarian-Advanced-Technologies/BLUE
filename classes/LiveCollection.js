@@ -2,6 +2,7 @@
 
 class LiveCollection {
   values = [];
+
   constructor(schema) {
     this.schema = schema;
   }
@@ -9,6 +10,7 @@ class LiveCollection {
   async init() {
     const docs = await this.schema.find();
     this.values = docs;
+    this.cached = true;
   }
 
   get(query) {
@@ -29,21 +31,23 @@ class LiveCollection {
     const document = new this.schema(value);
     this.values.push(document);
 
-    console.log(document);
-
     document.save();
 
     return document;
   }
-  async update(filter, update, cb) {
-    const query = this.schema
-      .findOneAndUpdate(filter, update)
-      .exec()
-      .catch((err) => {
-        console.error(err);
-      });
+  async update(filter, update, cb, complex = false) {
+    if (!complex) {
+      const query = this.schema
+        .findOneAndUpdate(filter, update)
+        .exec()
+        .catch((err) => {
+          console.error(err);
+        });
 
-    cb(this.values);
+      cb(this.values);
+    } else {
+      cb(this.values);
+    }
   }
 
   async delete(filter, cb) {

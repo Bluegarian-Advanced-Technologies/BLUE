@@ -48,8 +48,6 @@ async function initialize(client, config = {}) {
   await client.BACH.restrictedChannels.init();
   console.log("Initialized restricted channels");
 
-  console.log(client.BACH.restrictedChannels.getAll());
-
   for (let i = 0; i < commands.length; i++) {
     const command = commands[i];
     const registration = await registerCommand.register(client, command);
@@ -126,11 +124,24 @@ async function initialize(client, config = {}) {
       return embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
     const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
-    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id))
+    if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id))
       return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
 
-    if (command.permissions && !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag])))
+    if (command.permissions != null && !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag])))
       return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error");
+
+    const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === message.guildId);
+    const restrictedChannelCommands = restrictedChannel.channels.find((channel) => channel.channel === message.channelId);
+
+    if (restrictedChannel != null && restrictedChannelCommands?.commands?.includes(command.id))
+      return embedMessageReply(
+        "Command restricted",
+        `This command can only be run in the following channels: ${restrictedChannel.channels.reduce((total, value) => {
+          if (value.commands.includes(command.id)) return total + "\n<#" + value.channel + ">";
+          return total;
+        }, "\n")}`,
+        "error"
+      );
 
     args.shift();
 
@@ -329,6 +340,19 @@ async function initialize(client, config = {}) {
 
     if (command.permissions && !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag])))
       return embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error");
+
+    const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === interaction.guildId);
+    const restrictedChannelCommands = restrictedChannel.channels.find((channel) => channel.channel === interaction.channelId);
+
+    if (restrictedChannel != null && restrictedChannelCommands?.commands?.includes(command.id))
+      return embedInteractionReply(
+        "Command restricted",
+        `This command can only be run in the following channels: ${restrictedChannel.channels.reduce((total, value) => {
+          if (value.commands.includes(command.id)) return total + "\n<#" + value.channel + ">";
+          return total;
+        }, "\n")}`,
+        "error"
+      );
 
     const args = [];
 
