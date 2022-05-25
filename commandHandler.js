@@ -153,12 +153,12 @@ async function initialize(client, config = {}) {
         case "integer": {
           const int = parseInt(args[i]);
           if (isNaN(int)) {
-            return new Error(`Not a number: number expected at argument ${i + 1}: ${expectedArg.name}`);
+            return new Error(`Not a integer: integer expected at argument ${i + 1}: ${expectedArg.name}`);
           }
           if (expectedArg.min != null)
-            if (int < expectedArg.min) return new Error(`Number smaller than min value of ${expectedArg.min}: at argument ${i + 1}: ${expectedArg.name}`);
+            if (int < expectedArg.min) return new Error(`Integer smaller than min value of ${expectedArg.min}: at argument ${i + 1}: ${expectedArg.name}`);
           if (expectedArg.max != null)
-            if (int > expectedArg.max) return new Error(`Number smaller than max value of ${expectedArg.max}: at argument ${i + 1}: ${expectedArg.name}`);
+            if (int > expectedArg.max) return new Error(`Integer smaller than max value of ${expectedArg.max}: at argument ${i + 1}: ${expectedArg.name}`);
           return (args[i] = int);
         }
         case "number": {
