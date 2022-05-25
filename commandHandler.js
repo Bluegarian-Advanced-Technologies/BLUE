@@ -13,6 +13,7 @@ const LiveCollection = require("./classes/LiveCollection");
 const disabledCommands = require("./models/disabledCommands");
 const disabledEvents = require("./models/disabledEvents");
 const restrictedChannels = require("./models/restrictedChannels");
+const restrictedRoles = require("./models/restrictedRoles")
 const users = require("./models/users");
 
 async function initialize(client, config = {}) {
@@ -47,6 +48,11 @@ async function initialize(client, config = {}) {
   console.log("Initializing restricted channels...");
   await client.BACH.restrictedChannels.init();
   console.log("Initialized restricted channels");
+
+  client.BACH.restrictedRoles = new LiveCollection(restrictedRoles);
+  console.log("Initializing restricted roles...");
+  await client.BACH.restrictedRoles.init();
+  console.log("Initialized restricted roles");
 
   for (let i = 0; i < commands.length; i++) {
     const command = commands[i];
