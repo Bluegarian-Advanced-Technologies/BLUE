@@ -6,7 +6,7 @@ const { Permissions } = require("discord.js");
 const botConfig = require("./config.json");
 
 const utils = require("./utils.js");
-const { embedMessage } = utils;
+const { embedMessage, checkBoolean } = utils;
 const registerCommand = require("./BACH/registerCommand");
 const LiveCollection = require("./classes/LiveCollection");
 
@@ -139,7 +139,7 @@ async function initialize(client, config = {}) {
       !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag])) &&
       message.author.id !== client.application.owner.id
     )
-      return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error");
+      return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
 
     const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === message.guildId);
     const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
@@ -195,7 +195,7 @@ async function initialize(client, config = {}) {
           return (args[i] = num);
         }
         case "boolean": {
-          const bool = Boolean(args[i]);
+          const bool = checkBoolean(args[i]);
           if (typeof bool !== "boolean") {
             return new Error(`Not a boolean: boolean expected at argument ${i + 1}: ${expectedArg.name}`);
           }
@@ -246,8 +246,7 @@ async function initialize(client, config = {}) {
         ];
       args.shift();
       const result = subcommandRaw.expectedArgs.map((expectedArg, i) => {
-        if (!expectedArg.required) return;
-        if (args[i] == null) return new Error(`${expectedArg.name} is required`);
+        if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
         if (expectedArg.options) {
           const optionsList = [];
 
@@ -267,8 +266,7 @@ async function initialize(client, config = {}) {
     const validationResult = command.subcommanded
       ? validateSubcommand(command.expectedArgs.find((subcommandRaw) => subcommandRaw.name === subcommand))
       : command.expectedArgs.map((expectedArg, i) => {
-          if (!expectedArg.required) return;
-          if (args[i] == null) return new Error(`${expectedArg.name} is required`);
+          if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
           if (expectedArg.options) {
             const optionsList = [];
 
@@ -365,7 +363,7 @@ async function initialize(client, config = {}) {
       !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag])) &&
       interaction.user.id !== client.application.owner.id
     )
-      return embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error");
+      return embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
 
     const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === interaction.guildId);
     const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);

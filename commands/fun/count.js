@@ -6,14 +6,11 @@ module.exports = {
   category: "Fun",
   slash: "both",
   aliases: [],
-
-  counters: [],
-
   expectedArgs: [
     {
       type: "Subcommand",
       name: "begin",
-      description: "Start counting",
+      description: "Starts counting",
       expectedArgs: [
         {
           type: "Integer",
@@ -71,7 +68,7 @@ module.exports = {
 
             channel.send(currentCount.toString());
 
-            if (Math.abs(currentCount) === Math.abs(num2)) {
+            if (currentCount === num2) {
               stopCount(count);
             }
           },

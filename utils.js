@@ -46,4 +46,13 @@ function embedMessage(title = "", text = "", status = "") {
   return embed;
 }
 
-module.exports = { getAllFiles, embedMessage };
+function checkBoolean(string = "") {
+  if (typeof string !== "string") return false;
+
+  string = string.toLowerCase().trim();
+  if (string !== "true" && string !== "false") return new Error("Must be true or false string")
+
+  return (string === 'true');
+}
+
+module.exports = { getAllFiles, embedMessage, checkBoolean };
