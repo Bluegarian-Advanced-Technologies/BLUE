@@ -13,7 +13,7 @@ const LiveCollection = require("./classes/LiveCollection");
 const disabledCommands = require("./models/disabledCommands");
 const disabledEvents = require("./models/disabledEvents");
 const restrictedChannels = require("./models/restrictedChannels");
-const restrictedRoles = require("./models/restrictedRoles")
+const restrictedRoles = require("./models/restrictedRoles");
 const users = require("./models/users");
 
 async function initialize(client, config = {}) {
@@ -70,6 +70,7 @@ async function initialize(client, config = {}) {
     } else {
       await rest.put(Routes.applicationGuildCommands("969385645963370496", "738768458627416116"), { body: slashCommandsPayload });
       await rest.put(Routes.applicationGuildCommands("969385645963370496", "905595623208796161"), { body: slashCommandsPayload });
+      await rest.put(Routes.applicationGuildCommands("969385645963370496", "834471563331371078"), { body: slashCommandsPayload });
     }
 
     console.log("Successfully reloaded application (/) commands.");
@@ -130,23 +131,38 @@ async function initialize(client, config = {}) {
       return embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
     const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
-    if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id))
+    if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id) && interaction.user.id !== client.application.owner.id)
       return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
 
-    if (command.permissions != null && !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag])))
+    if (
+      command.permissions != null &&
+      !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag])) &&
+      message.author.id !== client.application.owner.id
+    )
       return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error");
 
-    const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === message.guildId);
-    const restrictedChannelCommands = restrictedChannel.channels.find((channel) => channel.channel === message.channelId);
+    const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === message.guildId);
+    const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
 
-    if (restrictedChannel != null && restrictedChannelCommands?.commands?.includes(command.id))
+    if (restrictedRoles != null && restrictedRolesCommand != null && !restrictedRolesCommand.roles.every((role) => message.member.roles.cache.has(role)))
+      return embedMessageReply(
+        "Insufficient roles",
+        `You require the following roles to use this command: ${restrictedRolesCommand.roles.reduce((total, value) => {
+          return total + "\n<@&" + value + ">";
+        }, "\n")}`,
+        "error" && interaction.user.id !== client.application.owner.id
+      );
+
+    const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === message.guildId);
+    const restrictedChannelCommands = restrictedChannel?.commands?.find((cmd) => cmd.command === command.id);
+
+    if (restrictedChannel != null && restrictedChannelCommands != null && !restrictedChannelCommands?.channels.includes(message.channelId))
       return embedMessageReply(
         "Command restricted",
-        `This command can only be run in the following channels: ${restrictedChannel.channels.reduce((total, value) => {
-          if (value.commands.includes(command.id)) return total + "\n<#" + value.channel + ">";
-          return total;
+        `This command can only be run in the following channels: ${restrictedChannelCommands.channels.reduce((total, value) => {
+          return total + "\n<#" + value + ">";
         }, "\n")}`,
-        "error"
+        "error" && interaction.user.id !== client.application.owner.id
       );
 
     args.shift();
@@ -341,21 +357,36 @@ async function initialize(client, config = {}) {
       return embedInteractionReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
     const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
-    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id))
+    if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id) && interaction.user.id !== client.application.owner.id)
       return embedInteractionReply("Command Disabled", "This command is disabled in the server", "error");
 
-    if (command.permissions && !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag])))
+    if (
+      command.permissions &&
+      !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag])) &&
+      interaction.user.id !== client.application.owner.id
+    )
       return embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` to run this command`, "error");
 
-    const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === interaction.guildId);
-    const restrictedChannelCommands = restrictedChannel.channels.find((channel) => channel.channel === interaction.channelId);
+    const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === interaction.guildId);
+    const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
 
-    if (restrictedChannel != null && restrictedChannelCommands?.commands?.includes(command.id))
+    if (restrictedRoles != null && restrictedRolesCommand != null && !restrictedRolesCommand.roles.every((role) => interaction.member.roles.cache.has(role)))
+      return embedInteractionReply(
+        "Insufficient roles",
+        `You require the following roles to use this command: ${restrictedRolesCommand.roles.reduce((total, value) => {
+          return total + "\n<@&" + value + ">";
+        }, "\n")}`,
+        "error" && interaction.user.id !== client.application.owner.id
+      );
+
+    const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === interaction.guildId);
+    const restrictedChannelCommands = restrictedChannel?.commands?.find((cmd) => cmd.command === command.id);
+
+    if (restrictedChannel != null && restrictedChannelCommands != null && !restrictedChannelCommands?.channels.includes(interaction.channelId))
       return embedInteractionReply(
         "Command restricted",
-        `This command can only be run in the following channels: ${restrictedChannel.channels.reduce((total, value) => {
-          if (value.commands.includes(command.id)) return total + "\n<#" + value.channel + ">";
-          return total;
+        `This command can only be run in the following channels: ${restrictedChannelCommands.channels.reduce((total, value) => {
+          return total + "\n<#" + value + ">";
         }, "\n")}`,
         "error"
       );

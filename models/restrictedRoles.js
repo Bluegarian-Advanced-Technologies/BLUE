@@ -6,7 +6,7 @@ const restrictedRole = mongoose.Schema({
     required: true,
   },
 
-  roles: {
+  commands: {
     type: Array,
     default: [],
     required: true,

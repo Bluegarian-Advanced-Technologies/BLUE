@@ -6,7 +6,7 @@ const restrictedChannel = mongoose.Schema({
     required: true,
   },
 
-  channels: {
+  commands: {
     type: Array,
     default: [],
     required: true,

@@ -6,6 +6,17 @@ function findTextCommand(client, cmd) {
   return query;
 }
 
+function checkCommandExists(client, isInteraction, targetCommand) {
+  if (isInteraction) {
+    command = client.BACH.commands.get(targetCommand.toLowerCase());
+    if (command == null) false;
+  } else {
+    command = findTextCommand(client, targetCommand);
+    if (command == null) return false;
+  }
+  return true;
+}
+
 module.exports = {
   id: "command",
   description: "Enable or disable commands",
@@ -91,6 +102,22 @@ module.exports = {
         },
         {
           type: "String",
+          name: "_action",
+          description: "Add or remove role for command to require",
+          required: true,
+          options: [
+            {
+              name: "Add",
+              value: "add",
+            },
+            {
+              name: "Remove",
+              value: "remove",
+            },
+          ],
+        },
+        {
+          type: "String",
           name: "command_",
           description: "Targeted command",
           required: true,
@@ -106,15 +133,9 @@ module.exports = {
       case "toggle": {
         const targetCommand = args[1].toLowerCase();
 
-        let command;
+        if (!checkCommandExists(client, isInteraction, targetCommand)) return embedReply("Command non-existent", null, "warn");
 
-        if (isInteraction) {
-          command = client.BACH.commands.get(targetCommand.toLowerCase());
-          if (!command) return embedReply("Command non-existent", null, "warn");
-        } else {
-          command = findTextCommand(client, targetCommand);
-          if (!command) return embedReply("Command non-existent", null, "warn");
-        }
+        let command;
 
         if (command.disableExempted) return embedReply("Cannot disable command", "This command is exempted from being disabled.", "error");
 
@@ -164,6 +185,9 @@ module.exports = {
       }
 
       case "channelonly": {
+        if (command.disableExempted)
+          return embedReply("Cannot restrict command", "This command is exempted from being restricted for saftey purposes.", "error");
+
         let dynamicChannel;
 
         if (isInteraction) {
@@ -177,6 +201,8 @@ module.exports = {
 
         const targetChannel = dynamicChannel;
         const targetCommand = args[2].toLowerCase();
+
+        if (!checkCommandExists(client, isInteraction, targetCommand)) return embedReply("Command non-existent", null, "warn");
 
         if (isInteraction && client.BACH.commands.get(targetCommand) == null) {
           return embedReply("Command non-existent");
@@ -193,15 +219,15 @@ module.exports = {
               null,
               (cache) => {
                 const server = cache.find((server) => server.guildId === guildId);
-                const channels = server.channels;
+                const commands = server.commands;
 
-                for (const channel of channels) {
-                  if (channel.channel === targetChannel) {
-                    if (!channel.commands.includes(targetCommand))
+                for (const command of commands) {
+                  if (command.command === targetCommand) {
+                    if (!command.channels.includes(targetChannel))
                       return embedReply("Command not restricted", "This command is not restricted to this channel yet.", "warn");
-                    for (let i = 0; i < channel.commands.length; ++i) {
-                      if (channel.commands[i] === targetCommand) {
-                        channel.commands.splice(i, 1);
+                    for (let i = 0; i < command.channels.length; ++i) {
+                      if (command.channels[i] === targetCommand) {
+                        command.channels.splice(i, 1);
 
                         server.markModified("channels");
                         server.save();
@@ -221,26 +247,27 @@ module.exports = {
             if (cachedServer == null) {
               client.BACH.restrictedChannels.set({
                 guildId,
-                channels: [
+                commands: [
                   {
-                    channel: targetChannel,
-                    commands: [targetCommand],
+                    command: targetCommand,
+                    channels: [targetChannel],
                   },
                 ],
               });
+              embedReply("Successfully completed", `Restricted *${targetCommand}* to <#${targetChannel}>.`, "ok");
             } else {
               client.BACH.restrictedChannels.update(
                 null,
                 null,
                 (cache) => {
                   const server = cache.find((server) => server.guildId === guildId);
-                  const channels = server.channels;
+                  const commands = server.commands;
 
-                  for (const channel of channels) {
-                    if (channel.channel === targetChannel) {
-                      if (channel.commands.includes(targetCommand))
+                  for (const command of commands) {
+                    if (command.command === targetCommand) {
+                      if (command.channels.includes(targetChannel))
                         return embedReply("Command already restricted", "This command is already restricted to the channel.", "warn");
-                      channel.commands.push(targetCommand);
+                      command.channels.push(targetCommand);
 
                       server.markModified("channels");
                       server.save();
@@ -251,8 +278,8 @@ module.exports = {
                     }
                   }
 
-                  client.BACH.restrictedChannels.update({ guildId }, { $push: { channels: { channel: targetChannel, commands: [targetCommand] } } }, () => {
-                    channels.push({ channel: targetChannel, commands: [targetCommand] });
+                  client.BACH.restrictedChannels.update({ guildId }, { $push: { commands: { command: targetCommand, channels: [targetChannel] } } }, () => {
+                    commands.push({ command: targetCommand, channels: [targetChannel] });
                   });
 
                   embedReply("Successfully completed", `Restricted *${targetCommand}* to <#${targetChannel}>.`, "ok");
@@ -266,6 +293,100 @@ module.exports = {
       }
 
       case "requiredrole": {
+        let dynamicRole;
+
+        if (isInteraction) {
+          dynamicRole = args[0].id;
+        } else {
+          dynamicRole = args[0][1];
+        }
+
+        const targetRole = dynamicRole;
+        const targetCommand = args[2].toLowerCase();
+
+        if (!checkCommandExists(client, isInteraction, targetCommand)) return embedReply("Command non-existent", null, "warn");
+
+        const cachedServer = client.BACH.restrictedRoles.getAll().find((server) => server.guildId === guildId);
+
+        switch (args[1]) {
+          case "add": {
+            if (cachedServer == null) {
+              client.BACH.restrictedRoles.set({
+                guildId,
+                commands: [
+                  {
+                    command: targetCommand,
+                    roles: [targetRole],
+                  },
+                ],
+              });
+            } else {
+              client.BACH.restrictedRoles.update(
+                null,
+                null,
+                (cache) => {
+                  const server = cache.find((server) => server.guildId === guildId);
+                  const commands = server.commands;
+
+                  const command = commands.find((cmd) => cmd.command === targetCommand);
+
+                  if (command != null && command.roles.includes(targetRole))
+                    return embedReply("Command already restricted to role", `This command already includes <@&${targetRole}>`, "warn");
+
+                  if (command != null) {
+                    command.roles.push(targetRole);
+                  } else {
+                    commands.push({
+                      command: targetCommand,
+                      roles: [targetRole],
+                    });
+                  }
+
+                  server.markModified("commands");
+                  server.save();
+
+                  embedReply("Sucessfully completed", `Command *${targetCommand}* now requires <@&${targetRole}>`, "ok");
+                },
+                true
+              );
+            }
+
+            break;
+          }
+          case "remove": {
+            if (cachedServer == null) return embedReply("No restricted command roles", null, "warn");
+
+            client.BACH.restrictedRoles.update(
+              null,
+              null,
+              (cache) => {
+                const server = cache.find((server) => server.guildId === guildId);
+                const commands = server.commands;
+
+                const command = commands.find((cmd) => cmd.command === targetCommand);
+
+                if (command == null) return embedReply("Command not role restricted", "This command is not role restricted yet.", "warn");
+                if (!command.roles.includes(targetRole))
+                  return embedReply("Command not restricted to role", `This command is not restricted to role <@&${targetRole}> yet.`, "warn");
+
+                for (let i = 0; i < command.roles.length; i++) {
+                  const role = command.roles[i];
+
+                  if (targetRole === role) {
+                    command.roles.splice(i, 1);
+                    break;
+                  }
+                }
+
+                server.markModified("commands");
+                server.save();
+
+                embedReply("Sucessfully completed", `Command *${targetCommand}* no longer requires <@&${targetRole}>`, "ok");
+              },
+              true
+            );
+          }
+        }
       }
     }
   },
