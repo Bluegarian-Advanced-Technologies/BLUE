@@ -345,7 +345,7 @@ module.exports = {
                   server.markModified("commands");
                   server.save();
 
-                  embedReply("Sucessfully completed", `Command *${targetCommand}* now requires <@&${targetRole}>`, "ok");
+                  embedReply("Successfully completed", `Command *${targetCommand}* now requires <@&${targetRole}>`, "ok");
                 },
                 true
               );
@@ -381,7 +381,7 @@ module.exports = {
                 server.markModified("commands");
                 server.save();
 
-                embedReply("Sucessfully completed", `Command *${targetCommand}* no longer requires <@&${targetRole}>`, "ok");
+                embedReply("Successfully completed", `Command *${targetCommand}* no longer requires <@&${targetRole}>`, "ok");
               },
               true
             );
