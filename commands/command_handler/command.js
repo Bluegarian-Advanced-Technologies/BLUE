@@ -137,6 +137,14 @@ module.exports = {
 
         let command;
 
+        if (isInteraction) {
+          command = client.BACH.commands.get(targetCommand.toLowerCase());
+          if (!command) return embedReply("Command non-existent", null, "warn");
+        } else {
+          command = findTextCommand(client, targetCommand);
+          if (!command) return embedReply("Command non-existent", null, "warn");
+        }
+
         if (command.disableExempted) return embedReply("Cannot disable command", "This command is exempted from being disabled.", "error");
 
         const cachedServer = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === guildId);

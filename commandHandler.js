@@ -68,9 +68,9 @@ async function initialize(client, config = {}) {
     if (process.env.NODE_ENV === "production") {
       await rest.put(Routes.applicationCommands("969385645963370496"), { body: slashCommandsPayload });
     } else {
-      await rest.put(Routes.applicationGuildCommands("969385645963370496", "738768458627416116"), { body: slashCommandsPayload });
-      await rest.put(Routes.applicationGuildCommands("969385645963370496", "905595623208796161"), { body: slashCommandsPayload });
-      await rest.put(Routes.applicationGuildCommands("969385645963370496", "834471563331371078"), { body: slashCommandsPayload });
+      // await rest.put(Routes.applicationGuildCommands("969385645963370496", "738768458627416116"), { body: slashCommandsPayload }); // EE server
+      // await rest.put(Routes.applicationGuildCommands("969385645963370496", "905595623208796161"), { body: slashCommandsPayload }); // Jesus server
+      await rest.put(Routes.applicationGuildCommands("969385645963370496", "834471563331371078"), { body: slashCommandsPayload }); // Donuts server
     }
 
     console.log("Successfully reloaded application (/) commands.");
@@ -87,7 +87,7 @@ async function initialize(client, config = {}) {
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
     if (message.content.startsWith(`<@${client.user.id}>`) || message.content.startsWith(`<@!${client.user.id}>`))
-      return client.BACH.commands.get("help").execute(message, { client, config: botConfig });
+      return client.BACH.commands.get("help").execute(message, { client, config: botConfig, reply: messageReply });
     if (!message.content.startsWith(prefix)) return;
 
     const user = client.BACH.users.getAll().find((userObj) => userObj.userId === message.author.id);
@@ -97,32 +97,27 @@ async function initialize(client, config = {}) {
     if (!command) return;
 
     function messageReply(content = "", ping = false, options = {}) {
-      const { embeds, files, tts } = options;
+      content == null ? null : content.substring(0, 2000);
+
       const reply = {
+        content,
         allowedMentions: {
           repliedUser: ping,
         },
+        ...options,
       };
-
-      if (content) reply.content = content.substring(0, 2000);
-      if (embeds) reply.embeds = embeds;
-      if (files) reply.files = files;
-      if (tts) reply.tts = tts;
 
       message.reply(reply);
     }
 
     function embedMessageReply(title, text, status, ping = false, options = {}) {
-      const { files } = options;
-
       const reply = {
         embeds: [embedMessage(title, text, status)],
         allowedMentions: {
           repliedUser: ping,
         },
+        ...options,
       };
-
-      if (files) reply.files = files;
 
       message.reply(reply);
     }
@@ -131,7 +126,7 @@ async function initialize(client, config = {}) {
       return embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
     const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
-    if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id) && interaction.user.id !== client.application.owner.id)
+    if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id) && message.user.id !== client.application.owner.id)
       return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
 
     if (
@@ -246,6 +241,7 @@ async function initialize(client, config = {}) {
         ];
       args.shift();
       const result = subcommandRaw.expectedArgs.map((expectedArg, i) => {
+        if (args[i] == null && expectedArg[i + 1]?.required == null) return;
         if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
         if (expectedArg.options) {
           const optionsList = [];
@@ -266,6 +262,7 @@ async function initialize(client, config = {}) {
     const validationResult = command.subcommanded
       ? validateSubcommand(command.expectedArgs.find((subcommandRaw) => subcommandRaw.name === subcommand))
       : command.expectedArgs.map((expectedArg, i) => {
+          if (args[i] == null && expectedArg[i + 1]?.required == null) return;
           if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
           if (expectedArg.options) {
             const optionsList = [];
@@ -325,28 +322,22 @@ async function initialize(client, config = {}) {
     const user = client.BACH.users.getAll().find((userObj) => userObj.userId === interaction.user.id);
 
     function interactionReply(content = "", ephemeral = false, options = {}) {
-      const { embeds, files, tts } = options;
+      content == null ? null : content.substring(0, 2000);
       const reply = {
+        content,
         ephemeral,
+        ...options,
       };
-
-      if (content) reply.content = content.substring(0, 2000);
-      if (embeds) reply.embeds = embeds;
-      if (files) reply.files = files;
-      if (tts) reply.tts = tts;
 
       interaction.reply(reply);
     }
 
     function embedInteractionReply(title, text, status, ephemeral = false, options = {}) {
-      const { files } = options;
-
       const reply = {
         embeds: [embedMessage(title, text, status)],
         ephemeral,
+        ...options,
       };
-
-      if (files) reply.files = files;
 
       interaction.reply(reply);
     }
