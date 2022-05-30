@@ -1,3 +1,6 @@
+const { createEmbed } = require("../../utils");
+const {colors} = require("../../config.json");
+
 module.exports = {
   id: "info",
   description: "Attain information varying items",
@@ -9,7 +12,11 @@ module.exports = {
       type: "Subcommand",
       name: "server",
       description: "Attain information on this server",
-      expectedArgs: [],
+      expectedArgs: [{
+        type: "Boolean",
+        name: "complex",
+        description: "Whether or not to list advanced info",
+      },],
     },
     {
       type: "Subcommand",
@@ -56,9 +63,17 @@ module.exports = {
     },
   ],
 
-  execute: (cmd, { subcommand, args }) => {
+  execute: (cmd, { subcommand, guild, args }) => {
     switch (subcommand) {
       case "server": {
+
+        const baseEmbed = createEmbed({
+          color: colors.primary,
+          author: { name: `${guild.name} | ${guild.nameAcronym}`  }
+        })
+
+        console.log(guild.icon)
+
         break;
       }
       case "user": {

@@ -39,15 +39,6 @@ module.exports = {
       return embedReply("No definition found", `Could not find definitions for word "${word}"`);
     }
 
-    const identifier = channelId + new Date().getTime().toString();
-
-    store.activeDefinitions.set(identifier, {
-      isUrban,
-      index: 0,
-      innerIndex: isUrban ? null : 0,
-      definitions: definitionPagesRaw,
-    });
-
     const rawComponents = [
       new MessageButton().setCustomId("prev").setLabel("Previous").setStyle("PRIMARY"),
       new MessageButton().setCustomId("next").setLabel("Next").setStyle("PRIMARY"),
@@ -61,12 +52,28 @@ module.exports = {
 
     const components = new MessageActionRow().addComponents(...rawComponents);
 
+    const embedDefinition = isUrban ? store.createUrbanDictEmbed(definitionPagesRaw[0]) : store.createDictEmbed(definitionPagesRaw[0]);
+
+    const message = await reply(null, false, {
+      embeds: [embedDefinition],
+      components: [components],
+    });
+
+    store.activeDefinitions.set(message.id, {
+      isUrban,
+      index: 0,
+      innerIndex: isUrban ? null : 0,
+      definitions: definitionPagesRaw,
+    });
+
     const collector = store.getCollector(channel);
     collector.on("collect", async (i) => {
+
+
       if (i.user.id !== user.id && !member.permissions.has(Permissions.FLAGS.ADMINISTRATOR))
         return i.reply({ content: "Sorry, but this isn't your defintion panel.", ephemeral: true });
 
-      const activeDefinition = store.activeDefinitions.get(identifier);
+      const activeDefinition = store.activeDefinitions.get(i.message.id);
 
       if (activeDefinition.isUrban) {
         switch (i.customId) {
@@ -109,18 +116,11 @@ module.exports = {
 
     collector.on("end", () => {
       for (let i = 0; i < activeChannelCollectors.length; i++) {
-        if (activeChannelCollectors[i].id === identifier) {
+        if (activeChannelCollectors[i].id === i.message.id) {
           activeChannelCollectors.splice(i, 1);
           break;
         }
       }
-    });
-
-    const embedDefinition = isUrban ? store.createUrbanDictEmbed(definitionPagesRaw[0]) : store.createDictEmbed(definitionPagesRaw[0]);
-
-    reply(null, false, {
-      embeds: [embedDefinition],
-      components: [components],
     });
   },
 };

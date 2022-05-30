@@ -286,6 +286,7 @@ async function initialize(client, config = {}) {
     const props = {
       client,
       config: botConfig,
+      guild: message.guild,
       guildId: message.guildId,
       user: message.author,
       member: message.member,
@@ -408,6 +409,7 @@ async function initialize(client, config = {}) {
     const props = {
       client,
       config: botConfig,
+      guild: interaction.guild,
       guildId: interaction.guildId,
       user: interaction.user,
       member: interaction.member,
