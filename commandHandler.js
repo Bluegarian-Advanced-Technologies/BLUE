@@ -68,8 +68,8 @@ async function initialize(client, config = {}) {
     if (process.env.NODE_ENV === "production") {
       await rest.put(Routes.applicationCommands("969385645963370496"), { body: slashCommandsPayload });
     } else {
-      // await rest.put(Routes.applicationGuildCommands("969385645963370496", "738768458627416116"), { body: slashCommandsPayload }); // EE server
-      // await rest.put(Routes.applicationGuildCommands("969385645963370496", "905595623208796161"), { body: slashCommandsPayload }); // Jesus server
+      await rest.put(Routes.applicationGuildCommands("969385645963370496", "738768458627416116"), { body: slashCommandsPayload }); // EE server
+      await rest.put(Routes.applicationGuildCommands("969385645963370496", "905595623208796161"), { body: slashCommandsPayload }); // Jesus server
       await rest.put(Routes.applicationGuildCommands("969385645963370496", "834471563331371078"), { body: slashCommandsPayload }); // Donuts server
     }
 
@@ -107,7 +107,7 @@ async function initialize(client, config = {}) {
         ...options,
       };
 
-      message.reply(reply);
+      return message.reply(reply);
     }
 
     function embedMessageReply(title, text, status, ping = false, options = {}) {
@@ -119,7 +119,7 @@ async function initialize(client, config = {}) {
         ...options,
       };
 
-      message.reply(reply);
+      return message.reply(reply);
     }
 
     if (command.elevation > (user?.elevation + 1 || 2) - 1)
@@ -329,7 +329,7 @@ async function initialize(client, config = {}) {
         ...options,
       };
 
-      interaction.reply(reply);
+      return interaction.reply(reply);
     }
 
     function embedInteractionReply(title, text, status, ephemeral = false, options = {}) {
@@ -339,7 +339,7 @@ async function initialize(client, config = {}) {
         ...options,
       };
 
-      interaction.reply(reply);
+      return interaction.reply(reply);
     }
 
     if (command.elevation > (user?.elevation + 1 || 2) - 1)

@@ -25,6 +25,7 @@ async function initialize(client, eventsDir) {
         }
       });
 
+      if (event.init) await event.init(client);
       client.BACH.events.set(event.id.toLowerCase(), event);
     } catch (err) {
       console.error(err);

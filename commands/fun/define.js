@@ -1,101 +1,8 @@
-const { load } = require("cheerio");
-const fetch = require("node-fetch");
+const { MessageEmbed, MessageActionRow, MessageButton, MessageComponentInteraction, Permissions } = require("discord.js");
 
-const { MessageEmbed, MessageActionRow, MessageButton } = require("discord.js");
+const DefinitionStore = require("../../classes/DefinitionStore");
 
-const { colors } = require("../../config.json");
-
-function createDictEmbed(definition) {
-  const embed = new MessageEmbed().setTitle(`Definition of "${definition.word}"`).setColor(colors.primary).setDescription(definition.definitions[0]).addFields({
-    name: "Part of Speech",
-    value: definition.partOfSpeech,
-  });
-
-  if (definition.textPhonetic != null) embed.addField("Pronunciation", definition.textPhonetic);
-  if (definition.synonyms.length !== 0) embed.addField("Synonyms", definition.synonyms.join(", "), true);
-  if (definition.antonyms.length !== 0) embed.addField("Antonyms", definition.antonyms.join(", "), true);
-
-  return embed;
-}
-
-async function getDictWord(word = "") {
-  const result = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).catch((err) => {
-    return console.error(err);
-  });
-
-  switch (result.status) {
-    case 404:
-      return false;
-      break;
-  }
-
-  const rawDefs = await result.json();
-
-  const definition = rawDefs[0];
-
-  const pages = [];
-
-  definition.meanings.forEach((meaning) => {
-    const defs = [];
-
-    meaning.definitions.forEach((def) => {
-      defs.push(def.definition);
-    });
-
-    pages.push({
-      word: definition.word,
-      partOfSpeech: meaning?.partOfSpeech,
-      definitions: defs,
-      synonyms: meaning?.synonyms ?? [],
-      antonyms: meaning?.antonyms ?? [],
-      textPhonetic: definition?.phonetic,
-    });
-  });
-
-  return pages[0];
-}
-
-function createUrbanDictEmbed(definition) {
-  const embed = new MessageEmbed().setColor(colors.primary);
-
-  return embed;
-}
-
-async function getUrbanDictWord(word = "") {
-  const html = await (await fetch(`https://www.urbandictionary.com/define.php?term=${word}`)).text();
-  const $ = load(html);
-
-  const definitions = $("div.meaning");
-  const authors = $("div.contributor > a");
-  const examples = $("div.example");
-  const ids = $("div.definition")?.attr("data-defid");
-
-  const definitionPages = [];
-
-  for (let i = 0; i < definitions.length; i++) {
-    const definition = definitions[i];
-  }
-
-  // const data = await fetch(`https://api.urbandictionary.com/v0/uncacheable?ids=${ids}`);
-  // const json = await data.json();
-  // const upvotes = json.thumbs[0]?.up ?? "";
-  // const downvotes = json.thumbs[0]?.down ?? "";
-
-  // const pages = [
-  //   {
-  //     author,
-  //     definition,
-  //     example,
-  //     id,
-  //     upvotes,
-  //     downvotes,
-  //   },
-  // ];
-
-  // console.log(definitions);
-
-  // return pages;
-}
+const store = new DefinitionStore();
 
 module.exports = {
   id: "define",
@@ -117,37 +24,102 @@ module.exports = {
     },
   ],
 
-  execute: async (cmd, { args, reply, channel, embedReply }) => {
+  execute: async (cmd, { args, reply, channel, channelId, member, user, embedReply }) => {
     const word = args[0].toLowerCase();
-    const urbanOption = args[1];
+    const isUrban = args[1] == null ? false : true;
 
-    let definitionPagesRaw = urbanOption ? getUrbanDictWord(word) : getDictWord(word);
+    let definitionPagesRaw = isUrban ? await store.getUrbanDictWord(word) : await store.getDictWord(word);
 
-    if (!urbanOption && definitionPagesRaw === false) {
-      definitionPagesRaw = getUrbanDictWord(word);
-    } else {
-      // No word found
+    if (!isUrban && definitionPagesRaw === false) {
+      definitionPagesRaw = await getUrbanDictWord(word);
+      if (definitionPagesRaw === false) {
+        return embedReply("No definition found", `Could not find definitions for word "${word}"`);
+      }
+    } else if (definitionPagesRaw === false) {
+      return embedReply("No definition found", `Could not find definitions for word "${word}"`);
     }
 
-    const components = new MessageActionRow().addComponents(
-      new MessageButton().customId("prev").setLabel("Previous").setStyle("SECONDARY"),
-      new MessageButton().customId("next").setLabel("Next").setStyle("PRIMARY")
-    );
+    const identifier = channelId + new Date().getTime().toString();
 
-    const collector = channel.createMessageComponentCollector({ time: 150000 });
+    store.activeDefinitions.set(identifier, {
+      isUrban,
+      index: 0,
+      innerIndex: isUrban ? null : 0,
+      definitions: definitionPagesRaw,
+    });
+
+    const rawComponents = [
+      new MessageButton().setCustomId("prev").setLabel("Previous").setStyle("PRIMARY"),
+      new MessageButton().setCustomId("next").setLabel("Next").setStyle("PRIMARY"),
+    ];
+    if (!isUrban) {
+      rawComponents.push(
+        new MessageButton().setCustomId("prevdef").setLabel("-").setStyle("SECONDARY"),
+        new MessageButton().setCustomId("nextdef").setLabel("+").setStyle("SECONDARY")
+      );
+    }
+
+    const components = new MessageActionRow().addComponents(...rawComponents);
+
+    const collector = store.getCollector(channel);
     collector.on("collect", async (i) => {
-      switch (i.customId) {
-        case "prev": {
-          break;
+      if (i.user.id !== user.id && !member.permissions.has(Permissions.FLAGS.ADMINISTRATOR))
+        return i.reply({ content: "Sorry, but this isn't your defintion panel.", ephemeral: true });
+
+      const activeDefinition = store.activeDefinitions.get(identifier);
+
+      if (activeDefinition.isUrban) {
+        switch (i.customId) {
+          case "prev": {
+            break;
+          }
+          case "next": {
+            break;
+          }
         }
-        case "next": {
+      } else {
+        // i: ButtonInteraction
+        switch (i.customId) {
+          case "prev": {
+            if (activeDefinition.index === 0) return console.log("Start"); // TODO: Add beginning message
+
+            --activeDefinition.index;
+            await i.update({
+              embeds: [store.createDictEmbed(activeDefinition.definitions[activeDefinition.index])],
+            });
+            break;
+          }
+          case "next": {
+            if (activeDefinition.definitions.length === activeDefinition.index + 1) return console.log("End"); // TODO: Add end message
+
+            ++activeDefinition.index;
+            await i.update({
+              embeds: [store.createDictEmbed(activeDefinition.definitions[activeDefinition.index])],
+            });
+            break; //ok  so I think what we should do
+          }
+          case "prevdef": {
+            break;
+          }
+          case "nextdef": {
+          }
+        }
+      }
+    });
+
+    collector.on("end", () => {
+      for (let i = 0; i < activeChannelCollectors.length; i++) {
+        if (activeChannelCollectors[i].id === identifier) {
+          activeChannelCollectors.splice(i, 1);
           break;
         }
       }
     });
 
+    const embedDefinition = isUrban ? store.createUrbanDictEmbed(definitionPagesRaw[0]) : store.createDictEmbed(definitionPagesRaw[0]);
+
     reply(null, false, {
-      embeds: [],
+      embeds: [embedDefinition],
       components: [components],
     });
   },
