@@ -126,6 +126,18 @@ module.exports = {
       }
       case "restricted": {
         switch (args[0]) {
+          case "dc": {
+            break;
+          }
+          case "de": {
+            break;
+          }
+          case "rc": {
+            break;
+          }
+          case "rr": {
+            break;
+          }
         }
 
         break;
