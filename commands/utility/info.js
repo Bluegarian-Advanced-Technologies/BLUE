@@ -65,7 +65,7 @@ module.exports = {
     },
   ],
 
-  execute: (cmd, { subcommand, guild, args, reply }) => {
+  execute: (cmd, { subcommand, guild, member, args, reply }) => {
     switch (subcommand) {
       case "server": {
         const embedData = {
@@ -105,6 +105,23 @@ module.exports = {
         break;
       }
       case "user": {
+        const user = await member.user.fetch();
+
+        const embedData = {
+          color: user.hexAccentColor,
+          author: { name: `${user.username + user.discriminator}${" | " + member.nickname === " | " ?? ""}`, iconURL: user.displayAvatarURL },
+          fields: [
+            {
+              name: "Created",
+              value: `<t:${Math.round(user.createdTimestamp / 1000)}:D>`,
+            }
+          ]
+        }
+
+        reply(null, false, {
+          embeds: [],
+        })
+
         break;
       }
       case "restricted": {
