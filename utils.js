@@ -50,37 +50,26 @@ function checkBoolean(string = "") {
   if (typeof string !== "string") return false;
 
   string = string.toLowerCase().trim();
-  if (string !== "true" && string !== "false")
-    return new Error("Must be true or false string");
+  if (string !== "true" && string !== "false") return new Error("Must be true or false string");
 
   return string === "true";
 }
 
-function createEmbed({
-  color = "",
-  title = "",
-  url = "",
-  author = {},
-  description = "",
-  thumbnail = "",
-  fields = [],
-  image = "",
-  timestamp = {},
-  footer = {},
-}) {
+function createEmbed({ color = "", title = "", url = "", author, description = "", thumbnail = "", fields = [], image = "", timestamp, footer }) {
   const embed = new MessageEmbed();
 
+  if (fields.length > 25) return new Error("Cannot have more than 25 fields");
+
   if (color != null) embed.setColor(color);
-  if (title != null) embed.setTitle(title);
+  if (title != null) embed.setTitle(title.slice(0, 256));
   if (url != null) embed.setURL(url);
-  if (author != null) embed.setColor({...author});
+  if (author != null) embed.setAuthor({ ...author });
   if (description != null) embed.setDescription(description.slice(0, 4096));
   if (thumbnail != null) embed.setThumbnail(thumbnail);
   if (fields != null) embed.addFields(...fields);
   if (image != null) embed.setImage(image);
-  if (image != null) embed.setImage(image);
-  if (timestamp != null) embed.setTimestamp(timestamp.date ?? undefined);
-  if (footer != null) embed.setFooter(...footer);
+  if (timestamp != null) embed.setTimestamp(timestamp?.date ?? undefined);
+  if (footer != null) embed.setFooter({ ...footer });
 
   return embed;
 }

@@ -1,5 +1,5 @@
 const { createEmbed } = require("../../utils");
-const {colors} = require("../../config.json");
+const { colors } = require("../../config.json");
 
 module.exports = {
   id: "info",
@@ -12,11 +12,13 @@ module.exports = {
       type: "Subcommand",
       name: "server",
       description: "Attain information on this server",
-      expectedArgs: [{
-        type: "Boolean",
-        name: "complex",
-        description: "Whether or not to list advanced info",
-      },],
+      expectedArgs: [
+        {
+          type: "Boolean",
+          name: "complex",
+          description: "Whether or not to list advanced info",
+        },
+      ],
     },
     {
       type: "Subcommand",
@@ -63,16 +65,42 @@ module.exports = {
     },
   ],
 
-  execute: (cmd, { subcommand, guild, args }) => {
+  execute: (cmd, { subcommand, guild, args, reply }) => {
     switch (subcommand) {
       case "server": {
-
-        const baseEmbed = createEmbed({
+        const embedData = {
           color: colors.primary,
-          author: { name: `${guild.name} | ${guild.nameAcronym}`  }
-        })
+          author: { name: `${guild.name} | ${guild.nameAcronym}`, iconURL: guild.iconURL() },
+          fields: [
+            {
+              name: "Members",
+              value: guild.memberCount.toString(),
+            },
+            {
+              name: "Created",
+              value: `<t:${Math.round(guild.createdTimestamp / 1000)}:D>`,
+            },
+            {
+              name: "Owner",
+              value: `<@${guild.ownerId}>`,
+            },
+          ],
+        };
 
-        console.log(guild.icon)
+        if (guild.description != null) embedData.description = guild.description;
+
+        if (args[0] === true) {
+          embedData.fields.push({
+            name: "AFK V.C.",
+            value: `${guild.afkChannel}`,
+          });
+        }
+
+        const baseEmbed = createEmbed(embedData);
+
+        reply(null, false, {
+          embeds: [baseEmbed],
+        });
 
         break;
       }

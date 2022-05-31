@@ -15,7 +15,7 @@ module.exports = {
   execute: async (guild, { client }) => {
     if (!(await guild.members.fetch(client.application.owner.id ?? client.application.owner.ownerId).catch(() => false))) {
       const server = client.BACH.servers.getAll().find((server) => server.guildId === guild.id);
-      const self = await guild.members.fetch(client.user.id);
+      const self = await guild.me;
 
       if (server == null || server.whitelisted == false) {
         await guild.channels.fetch();
