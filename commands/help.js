@@ -1,4 +1,4 @@
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder, formatEmoji } = require("discord.js");
 
 module.exports = {
   id: "help",
@@ -18,9 +18,9 @@ module.exports = {
     const { colors, assets } = config;
     const commandCategories = [];
 
-    const helpEmbed = new MessageEmbed()
+    const helpEmbed = new EmbedBuilder()
       .setColor(colors.primary)
-      .setAuthor({ name: "BLUE Help Center", iconURL: assets.icon })
+      .setAuthor({ name: "BLUE Help Center", iconURL: assets.icon, url: null })
       .setDescription(`Command options wrapped in \`<>\` are **required**, whilst \`[]\` are **optional**. All commands have their (**/**) varients.\n`)
       .setTimestamp()
       .setFooter({ text: "Bluegarian Logistics Universal Emulator: BLUE" });
@@ -68,14 +68,15 @@ module.exports = {
 
     for (let i = 0; i < commandCategories.length; ++i) {
       const category = commandCategories[i];
+      const fields = [];
 
       for (let o = 0; o < category.commands.length; o++) {
         const command = category.commands[o];
-        helpEmbed.addField(`$ \`${command.id}\``, command.description);
+        fields.push({ name: `$ \`${command.id}\``, value: command.description });
       }
-    }
 
-    console.log(commandCategories);
+      helpEmbed.addFields(fields);
+    }
 
     reply(null, false, { embeds: [helpEmbed] });
   },

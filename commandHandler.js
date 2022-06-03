@@ -1,7 +1,7 @@
 const { Collection } = require("discord.js");
 const { Routes } = require("discord-api-types/v9");
 const { REST } = require("@discordjs/rest");
-const { Permissions } = require("discord.js");
+const { PermissionsBitField } = require("discord.js");
 
 const botConfig = require("./config.json");
 
@@ -126,12 +126,12 @@ async function initialize(client, config = {}) {
       return embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
     const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
-    if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id) && message.user.id !== client.application.owner.id)
+    if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id) && message.author.id !== client.application.owner.id)
       return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
 
     if (
       command.permissions != null &&
-      !command.permissions.every((flag) => message.member.permissions.has(Permissions.FLAGS[flag])) &&
+      !command.permissions.every((flag) => message.member.permissions.has(PermissionsBitField.Flags[flag])) &&
       message.author.id !== client.application.owner.id
     )
       return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
@@ -139,25 +139,35 @@ async function initialize(client, config = {}) {
     const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === message.guildId);
     const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
 
-    if (restrictedRoles != null && restrictedRolesCommand != null && !restrictedRolesCommand.roles.every((role) => message.member.roles.cache.has(role)))
+    if (
+      restrictedRoles != null &&
+      restrictedRolesCommand != null &&
+      !restrictedRolesCommand.roles.every((role) => message.member.roles.cache.has(role)) &&
+      message.author.id !== client.application.owner.id
+    )
       return embedMessageReply(
         "Insufficient roles",
         `You require the following roles to use this command: ${restrictedRolesCommand.roles.reduce((total, value) => {
           return total + "\n<@&" + value + ">";
         }, "\n")}`,
-        "error" && interaction.user.id !== client.application.owner.id
+        "error"
       );
 
     const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === message.guildId);
     const restrictedChannelCommands = restrictedChannel?.commands?.find((cmd) => cmd.command === command.id);
 
-    if (restrictedChannel != null && restrictedChannelCommands != null && !restrictedChannelCommands?.channels.includes(message.channelId))
+    if (
+      restrictedChannel != null &&
+      restrictedChannelCommands != null &&
+      !restrictedChannelCommands?.channels.includes(message.channelId) &&
+      message.author.id !== client.application.owner.id
+    )
       return embedMessageReply(
         "Command restricted",
         `This command can only be run in the following channels: ${restrictedChannelCommands.channels.reduce((total, value) => {
           return total + "\n<#" + value + ">";
         }, "\n")}`,
-        "error" && interaction.user.id !== client.application.owner.id
+        "error"
       );
 
     args.shift();
@@ -292,9 +302,7 @@ async function initialize(client, config = {}) {
       member: message.member,
       channel: message.channel,
       channelId: message.channelId,
-      permissions: message,
       isInteraction: false,
-      subcommand,
       reply: messageReply,
       embedReply: embedMessageReply,
       args,
@@ -308,7 +316,7 @@ async function initialize(client, config = {}) {
   });
 
   client.on("interactionCreate", async (interaction) => {
-    if (!interaction.isCommand()) return;
+    if (!interaction.isChatInputCommand()) return;
 
     const command = client.BACH.commands.get(interaction.commandName);
 
@@ -352,7 +360,7 @@ async function initialize(client, config = {}) {
 
     if (
       command.permissions &&
-      !command.permissions.every((flag) => interaction.member.permissions.has(Permissions.FLAGS[flag])) &&
+      !command.permissions.every((flag) => interaction.member.permissions.has(PermissionsBitField.Flags[flag])) &&
       interaction.user.id !== client.application.owner.id
     )
       return embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
@@ -360,19 +368,29 @@ async function initialize(client, config = {}) {
     const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === interaction.guildId);
     const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
 
-    if (restrictedRoles != null && restrictedRolesCommand != null && !restrictedRolesCommand.roles.every((role) => interaction.member.roles.cache.has(role)))
+    if (
+      restrictedRoles != null &&
+      restrictedRolesCommand != null &&
+      !restrictedRolesCommand.roles.every((role) => interaction.member.roles.cache.has(role)) &&
+      interaction.user.id !== client.application.owner.id
+    )
       return embedInteractionReply(
         "Insufficient roles",
         `You require the following roles to use this command: ${restrictedRolesCommand.roles.reduce((total, value) => {
           return total + "\n<@&" + value + ">";
         }, "\n")}`,
-        "error" && interaction.user.id !== client.application.owner.id
+        "error"
       );
 
     const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === interaction.guildId);
     const restrictedChannelCommands = restrictedChannel?.commands?.find((cmd) => cmd.command === command.id);
 
-    if (restrictedChannel != null && restrictedChannelCommands != null && !restrictedChannelCommands?.channels.includes(interaction.channelId))
+    if (
+      restrictedChannel != null &&
+      restrictedChannelCommands != null &&
+      !restrictedChannelCommands?.channels.includes(interaction.channelId) &&
+      interaction.user.id !== client.application.owner.id
+    )
       return embedInteractionReply(
         "Command restricted",
         `This command can only be run in the following channels: ${restrictedChannelCommands.channels.reduce((total, value) => {
@@ -422,12 +440,12 @@ async function initialize(client, config = {}) {
       args,
     };
 
-    try {
-      await command.execute(interaction, props);
-    } catch (error) {
-      console.error(chalk.default.red(`${error}`));
-      await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
-    }
+    // try {
+    await command.execute(interaction, props);
+    // } catch (error) {
+    //   console.error(chalk.default.red(`${error}`));
+    //   await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
+    // }
   });
 }
 

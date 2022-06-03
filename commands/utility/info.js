@@ -65,12 +65,12 @@ module.exports = {
     },
   ],
 
-  execute: (cmd, { subcommand, guild, member, args, reply }) => {
+  execute: async (cmd, { subcommand, guild, member, args, reply }) => {
     switch (subcommand) {
       case "server": {
         const embedData = {
           color: colors.primary,
-          author: { name: `${guild.name} | ${guild.nameAcronym}`, iconURL: guild.iconURL() },
+          author: { name: `${guild.name} | ${guild.nameAcronym}`, iconURL: guild.iconURL(), url: null },
           fields: [
             {
               name: "Members",
@@ -109,18 +109,18 @@ module.exports = {
 
         const embedData = {
           color: user.hexAccentColor,
-          author: { name: `${user.username + user.discriminator}${" | " + member.nickname === " | " ?? ""}`, iconURL: user.displayAvatarURL },
+          author: { name: `${user.username + user.discriminator}${" | " + member.nickname === " | " ?? ""}`, iconURL: user.displayAvatarURL, url: null },
           fields: [
             {
               name: "Created",
               value: `<t:${Math.round(user.createdTimestamp / 1000)}:D>`,
-            }
-          ]
-        }
+            },
+          ],
+        };
 
         reply(null, false, {
           embeds: [],
-        })
+        });
 
         break;
       }

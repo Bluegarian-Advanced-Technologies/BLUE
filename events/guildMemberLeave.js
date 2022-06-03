@@ -1,5 +1,5 @@
 module.exports = {
-  id: "guildLeave",
+  id: "guildMemberLeave",
   once: false,
   eventType: "guildMemberRemove",
   disableExempted: true,

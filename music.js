@@ -4,10 +4,10 @@ module.exports = (client) => {
   client.manager = new Manager({
     nodes: [
       {
-        host: "lavalink.oops.wtf",
-        port: 443,
-        password: "www.freelavalink.ga",
-        secure: true,
+        host: "181.214.231.105",
+        port: 6665,
+        password: "syslink",
+        secure: false,
       },
     ],
     send(id, payload) {

@@ -1,4 +1,4 @@
-const { Permissions } = require("discord.js");
+const { PermissionsBitField } = require("discord.js");
 
 const LiveCollection = require("../classes/LiveCollection");
 const serverSchema = require("../models/server");
@@ -15,12 +15,12 @@ module.exports = {
   execute: async (guild, { client }) => {
     if (!(await guild.members.fetch(client.application.owner.id ?? client.application.owner.ownerId).catch(() => false))) {
       const server = client.BACH.servers.getAll().find((server) => server.guildId === guild.id);
-      const self = await guild.me;
+      const self = guild.members.me;
 
       if (server == null || server.whitelisted == false) {
         await guild.channels.fetch();
         const messageSendableChannel = guild.channels.cache.find(
-          (channel) => channel.isText() && channel.permissionsFor(self).has(Permissions.FLAGS.SEND_MESSAGES)
+          (channel) => channel.isTextBased() && channel.permissionsFor(self).has(PermissionsBitField.Flags.SendMessages)
         );
         if (messageSendableChannel != null)
           messageSendableChannel.send(
@@ -29,7 +29,7 @@ module.exports = {
 
         await guild.leave();
         console.log(
-          `----------------------------------\n! - Left unwhitelisted guild, info:\nGuild ID: ${guild.id}\nGuild Owner ID: ${guild.ownerId}\n----------------------------------`
+          `\n----------------------------------\n! - Left unwhitelisted guild, info:\nGuild ID: ${guild.id}\nGuild Owner ID: ${guild.ownerId}\n----------------------------------`
         );
       }
     }

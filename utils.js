@@ -19,7 +19,7 @@ function getAllFiles(dirPath, arrayOfFiles) {
   return arrayOfFiles;
 }
 
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 const { colors } = config;
 
 function embedMessage(title = "", text = "", status = "") {
@@ -38,7 +38,7 @@ function embedMessage(title = "", text = "", status = "") {
       color = colors.primary;
   }
 
-  const embed = new MessageEmbed().setColor(color);
+  const embed = new EmbedBuilder().setColor(color);
 
   if (title) embed.setTitle(title.substring(0, 256));
   if (text) embed.setDescription(text.substring(0, 4096));
@@ -55,8 +55,8 @@ function checkBoolean(string = "") {
   return string === "true";
 }
 
-function createEmbed({ color = "", title = "", url = "", author, description = "", thumbnail = "", fields = [], image = "", timestamp, footer }) {
-  const embed = new MessageEmbed();
+function createEmbed({ color, title, url, author, description, thumbnail, fields = [], image, timestamp, footer }) {
+  const embed = new EmbedBuilder();
 
   if (fields.length > 25) return new Error("Cannot have more than 25 fields");
 
@@ -66,7 +66,7 @@ function createEmbed({ color = "", title = "", url = "", author, description = "
   if (author != null) embed.setAuthor({ ...author });
   if (description != null) embed.setDescription(description.slice(0, 4096));
   if (thumbnail != null) embed.setThumbnail(thumbnail);
-  if (fields != null) embed.addFields(...fields);
+  if (fields != null) embed.addFields(fields);
   if (image != null) embed.setImage(image);
   if (timestamp != null) embed.setTimestamp(timestamp?.date ?? undefined);
   if (footer != null) embed.setFooter({ ...footer });

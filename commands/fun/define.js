@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageActionRow, MessageButton, MessageComponentInteraction, Permissions } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, MessageComponentInteraction, PermissionsBitField } = require("discord.js");
 const { load } = require("cheerio");
 const fetch = require("node-fetch");
 const { colors } = require("../../config.json");
@@ -24,7 +24,7 @@ const activeChannelCollectors = new Map();
 const activeDefinitions = new Map();
 
 function createUrbanDictEmbed(definition) {
-  const embed = new MessageEmbed().setTitle(`Definition of "${definition.word}"`).setDescription(`Lorem`).setColor(colors.primary);
+  const embed = new EmbedBuilder().setTitle(`Definition of "${definition.word}"`).setDescription(`Lorem`).setColor(colors.primary);
 
   return embed;
 }
@@ -38,19 +38,28 @@ function createUrbanDictEmbed(definition) {
       textPhonetic: string
     }}
    */
-function createDictEmbed(definition, innerIndex = 0) {
-  const embed = new MessageEmbed()
+function createDictEmbed(raw, definition, innerIndex = 0) {
+  const embed = new EmbedBuilder()
     .setTitle(`Definition of "${definition.word}"`)
     .setColor(colors.primary)
     .setDescription(definition.definitions[innerIndex])
-    .addFields({
-      name: "Part of Speech",
-      value: definition.partOfSpeech,
+    .setFooter({
+      text: `Page ${(raw.index ?? 0) + 1}/${raw.definitions?.length ?? raw.length} | Def. ${innerIndex + 1}/${definition.definitions?.length}`,
     });
 
-  if (definition.textPhonetic != null) embed.addField("Pronunciation", definition.textPhonetic);
-  if (definition.synonyms.length !== 0) embed.addField("Synonyms", definition.synonyms.join(", "), true);
-  if (definition.antonyms.length !== 0) embed.addField("Antonyms", definition.antonyms.join(", "), true);
+  const fields = [];
+
+  if (definition.textPhonetic != null) fields.push({ name: "Pronunciation", value: definition.textPhonetic });
+  if (definition.synonyms.length !== 0) fields.push({ name: "Synonyms", value: definition.synonyms.join(", "), inline: true });
+  if (definition.antonyms.length !== 0) fields.push({ name: "Antonyms", value: definition.antonyms.join(", "), inline: true });
+
+  embed.addFields([
+    {
+      name: "Part of Speech",
+      value: definition.partOfSpeech,
+    },
+    ...fields,
+  ]);
 
   return embed;
 }
@@ -125,16 +134,6 @@ async function getUrbanDictWord(word = "") {
   return false;
 }
 
-// function getCollector(channel) {
-//   const collector = this.activeChannelCollectors.get(channel.id);
-//   if (collector == null) {
-//     const newCollector = channel.createMessageComponentCollector({ idle: 100000 });
-//     this.activeChannelCollectors.set(channel.id, newCollector);
-//     return newCollector;
-//   }
-//   return collector;
-// }
-
 module.exports = {
   id: "define",
   description: "Recieve definitions of words",
@@ -157,33 +156,40 @@ module.exports = {
 
   execute: async (cmd, { args, reply, channel, channelId, member, user, embedReply }) => {
     const word = args[0].toLowerCase();
-    const isUrban = args[1] == null ? false : true;
+    let isUrban = args[1] == null ? false : true;
 
     let definitionPagesRaw = isUrban ? await getUrbanDictWord(word) : await getDictWord(word);
 
-    if (!isUrban && definitionPagesRaw === false) {
+    if (!isUrban && args[1] !== false && definitionPagesRaw === false) {
       definitionPagesRaw = await getUrbanDictWord(word);
       if (definitionPagesRaw === false) {
         return embedReply("No definition found", `Could not find definitions for word "${word}"`);
       }
+
+      isUrban = true;
     } else if (definitionPagesRaw === false) {
       return embedReply("No definition found", `Could not find definitions for word "${word}"`);
     }
 
     const rawComponents = [
-      new MessageButton().setCustomId("prev").setLabel("Previous").setStyle("PRIMARY").setDisabled(true),
-      new MessageButton().setCustomId("next").setLabel("Next").setStyle("PRIMARY"),
+      new ButtonBuilder().setCustomId("prev").setLabel("Previous").setStyle("Primary").setDisabled(true),
+      new ButtonBuilder().setCustomId("next").setLabel("Next").setStyle("Primary"),
     ];
     if (!isUrban) {
       rawComponents.push(
-        new MessageButton().setCustomId("prevdef").setLabel("-").setStyle("SECONDARY").setDisabled(true),
-        new MessageButton().setCustomId("nextdef").setLabel("+").setStyle("SECONDARY")
+        new ButtonBuilder().setCustomId("prevdef").setLabel("-").setStyle("Secondary").setDisabled(true),
+        new ButtonBuilder().setCustomId("nextdef").setLabel("+").setStyle("Secondary")
       );
     }
 
-    const components = new MessageActionRow().addComponents(...rawComponents);
+    if (definitionPagesRaw.length < 2) rawComponents[1].setDisabled(true);
+    if (definitionPagesRaw?.definitions?.length < 2) rawComponents[3].setDisabled(true);
 
-    const embedDefinition = isUrban ? createUrbanDictEmbed(definitionPagesRaw[0]) : createDictEmbed(definitionPagesRaw[0]);
+    const components = new ActionRowBuilder().setComponents(rawComponents);
+
+    const embedDefinition = isUrban
+      ? createUrbanDictEmbed(definitionPagesRaw, definitionPagesRaw[0])
+      : createDictEmbed(definitionPagesRaw, definitionPagesRaw[0]);
 
     const message = await reply(null, false, {
       embeds: [embedDefinition],
@@ -200,7 +206,7 @@ module.exports = {
 
     const collector = message.createMessageComponentCollector({ idle: 100000 });
     collector.on("collect", async (i) => {
-      if (i.user.id !== user.id && !member.permissions.has(Permissions.FLAGS.ADMINISTRATOR))
+      if (i.user.id !== user.id && !member.permissions.has(PermissionsBitField.Flags.Administrator))
         return i.reply({ content: "Sorry, but this isn't your defintion panel.", ephemeral: true });
 
       const activeDefinition = activeDefinitions.get(message.id);
@@ -215,59 +221,75 @@ module.exports = {
           }
         }
       } else {
-        if (activeDefinition.definitions.length === activeDefinition.index + 2) {
-          rawComponents[1].setDisabled(true);
-        } else {
-          rawComponents[1].setDisabled(false);
-        }
-        if (activeDefinition.index - 1 === 0) {
-          rawComponents[0].setDisabled(true);
-        } else {
-          rawComponents[0].setDisabled(false);
+        function checkButtons() {
+          if (activeDefinition.definitions.length === activeDefinition.index + 1) {
+            components.components[1].setDisabled(true);
+          } else {
+            components.components[1].setDisabled(false);
+          }
+          if (activeDefinition.index === 0) {
+            components.components[0].setDisabled(true);
+          } else {
+            components.components[0].setDisabled(false);
+          }
+          if (activeDefinition.definitions[activeDefinition.index].definitions.length === activeDefinition.innerIndex + 1) {
+            components.components[3].setDisabled(true);
+          } else {
+            components.components[3].setDisabled(false);
+          }
+          if (activeDefinition.innerIndex === 0) {
+            components.components[2].setDisabled(true);
+          } else {
+            components.components[2].setDisabled(false);
+          }
         }
 
         switch (i.customId) {
           case "prev": {
-            if (activeDefinition.index === 0) return console.log("Start"); // TODO: Add beginning message
+            if (activeDefinition.index === 0) return i.reply({ content: "Reached start of pages", ephemeral: true });
             activeDefinition.innerIndex = 0;
 
             --activeDefinition.index;
+            checkButtons();
             await i.update({
-              embeds: [createDictEmbed(activeDefinition.definitions[activeDefinition.index], activeDefinition.innerIndex)],
-              components: [new MessageActionRow().addComponents(...rawComponents)],
+              embeds: [createDictEmbed(activeDefinition, activeDefinition.definitions[activeDefinition.index], activeDefinition.innerIndex)],
+              components: [components],
             });
             break;
           }
           case "next": {
-            if (activeDefinition.definitions.length === activeDefinition.index + 1) return; // TODO: Add end message
-
+            if (activeDefinition.definitions.length === activeDefinition.index + 1) return i.reply({ content: "Reached end of pages", ephemeral: true });
             activeDefinition.innerIndex = 0;
 
             ++activeDefinition.index;
+            checkButtons();
             await i.update({
-              embeds: [createDictEmbed(activeDefinition.definitions[activeDefinition.index], activeDefinition.innerIndex)],
-              components: [new MessageActionRow().addComponents(...rawComponents)],
+              embeds: [createDictEmbed(activeDefinition, activeDefinition.definitions[activeDefinition.index], activeDefinition.innerIndex)],
+              components: [components],
             });
             break;
           }
           case "prevdef": {
-            if (activeDefinition.innerIndex === 0) return console.log("Start"); // TODO: Add beginning message
+            if (activeDefinition.innerIndex === 0) return i.reply({ content: "Reached start of definitions", ephemeral: true });
 
             --activeDefinition.innerIndex;
+            checkButtons();
             await i.update({
-              embeds: [createDictEmbed(activeDefinition.definitions[activeDefinition.index], activeDefinition.innerIndex)],
-              components: [new MessageActionRow().addComponents(...rawComponents)],
+              embeds: [createDictEmbed(activeDefinition, activeDefinition.definitions[activeDefinition.index], activeDefinition.innerIndex)],
+              components: [components],
             });
 
             break;
           }
           case "nextdef": {
-            if (activeDefinition.definitions[activeDefinition.index].definitions.length === activeDefinition.innerIndex + 1) return; // TODO: Add end message
+            if (activeDefinition.definitions[activeDefinition.index].definitions.length === activeDefinition.innerIndex + 1)
+              return i.reply({ content: "Reached end of definitions", ephemeral: true });
 
             ++activeDefinition.innerIndex;
+            checkButtons();
             await i.update({
-              embeds: [createDictEmbed(activeDefinition.definitions[activeDefinition.index], activeDefinition.innerIndex)],
-              components: [new MessageActionRow().addComponents(...rawComponents)],
+              embeds: [createDictEmbed(activeDefinition, activeDefinition.definitions[activeDefinition.index], activeDefinition.innerIndex)],
+              components: [components],
             });
           }
         }

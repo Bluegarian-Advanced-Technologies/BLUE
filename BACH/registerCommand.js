@@ -1,9 +1,9 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { Permissions } = require("discord.js");
+const { PermissionsBitField } = require("discord.js");
 
 const permissionsList = [];
 
-Object.keys(Permissions.FLAGS).map((permission) => {
+Object.keys(PermissionsBitField.Flags).map((permission) => {
   permissionsList.push(permission);
 });
 

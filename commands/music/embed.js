@@ -1,10 +1,13 @@
-const { MessageEmbed } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
+const { createEmbed } = require("../../utils");
 
-function createMusicEmbed() {
-  const embed = new MessageEmbed();
-
-  return embed;
-}
+/**
+ *
+ * @param {{
+ *  thumbnail: string
+ * }}
+ */
+function createMusicEmbed({ thumbnail, title, url, duration, requester }) {}
 
 module.exports = {
   notCommand: true,

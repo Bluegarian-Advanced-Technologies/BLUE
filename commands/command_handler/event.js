@@ -32,7 +32,7 @@ module.exports = {
     },
   ],
 
-  permissions: ["MANAGE_GUILD"],
+  permissions: ["ManageGuild"],
 
   execute: async (cmd, { client, guildId, embedReply, args }) => {
     const targetEvent = args[1].toLowerCase();
