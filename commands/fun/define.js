@@ -140,22 +140,24 @@ async function getUrbanDictWord(word = "") {
   const definitions = [];
   const definitionIds = [];
 
-  function siftDefinitionElements(definition) {
+  function siftDefinitionElements(definition, i) {
     const id = definition.attribs["data-defid"];
 
-    const wordEl = definition.childNodes[0].childNodes[0].childNodes[0];
-    const meaningEl = definition.childNodes[0].childNodes[1];
-    const exampleEl = definition.childNodes[0].childNodes[2];
-    const contributorEl = definition.childNodes[0].childNodes[3];
+    const _$ = load(definition);
+
+    const wordEl = _$(".word");
+    const meaningEl = _$(".meaning");
+    const exampleEl = _$(".example");
+    const contributorEl = _$(".contributor a");
 
     definitionIds.push(id);
 
     definitions.push({
       id,
-      word: $.text(wordEl.children).slice(0, 240),
-      definition: $.text(meaningEl.children).slice(0, 4096),
-      example: $.text(exampleEl.children).slice(0, 1024),
-      contributor: $.text(contributorEl.childNodes[1].children).slice(0, 1024),
+      word: wordEl.text().slice(0, 240),
+      definition: meaningEl.find("br").replaceWith("\n").end().text().slice(0, 4096),
+      example: exampleEl.find("br").replaceWith("\n").end().text().slice(0, 1024),
+      contributor: contributorEl.text(),
       upvotes: null,
       downvotes: null,
     });
@@ -172,15 +174,15 @@ async function getUrbanDictWord(word = "") {
 
       const definition = definitions.find((def) => def.id === id.toString());
 
-      const upvotes = thumb?.up ?? "";
-      const downvotes = thumb?.down ?? "";
+      const upvotes = thumb?.up ?? "??";
+      const downvotes = thumb?.down ?? "??";
       definition.upvotes = upvotes.toString();
       definition.downvotes = downvotes.toString();
     }
   }
 
   for (let i = 0; i < definitionElements.length; i++) {
-    siftDefinitionElements(definitionElements[i]);
+    siftDefinitionElements(definitionElements[i], i);
   }
 
   await insertDefinitionData(definitionIds);
@@ -211,17 +213,21 @@ module.exports = {
   execute: async (cmd, { args, reply, channel, channelId, member, user, embedReply }) => {
     const word = args[0].toLowerCase();
     let isUrban = args[1] == null ? false : true;
+    if (args[1] === false) isUrban = false;
 
-    let definitionPagesRaw = isUrban ? await getUrbanDictWord(word) : await getDictWord(word);
-    if (!isUrban && args[1] !== false && definitionPagesRaw === false) {
+    let definitionPagesRaw;
+
+    if (isUrban) {
       definitionPagesRaw = await getUrbanDictWord(word);
-      if (definitionPagesRaw === false) {
-        return embedReply("No definition found", `Could not find definitions for word "${word}"`);
-      }
-
+      if (definitionPagesRaw === false) return embedReply("No definition found", `Could not find urban definition of word "${word}"`);
+    } else if (!isUrban && args[1] == null) {
+      definitionPagesRaw = await getDictWord(word);
+      if (definitionPagesRaw === false) definitionPagesRaw = await getUrbanDictWord(word);
+      if (definitionPagesRaw === false) return embedReply("No definition found", `Could not find definitions of word "${word}"`);
       isUrban = true;
-    } else if (definitionPagesRaw === false) {
-      return embedReply("No definition found", `Could not find definitions for word "${word}"`);
+    } else if (!isUrban && args[1] === false) {
+      definitionPagesRaw = await getDictWord(word);
+      if (definitionPagesRaw === false) return embedReply("No definition found", `Could not find definition of word "${word}"`);
     }
 
     const rawComponents = [

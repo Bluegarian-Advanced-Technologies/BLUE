@@ -55,7 +55,7 @@ function checkBoolean(string = "") {
   return string === "true";
 }
 
-function createEmbed({ color, title, url, author, description, thumbnail, fields = [], image, timestamp, footer }) {
+function createEmbed({ color, title, url, author, description, thumbnail, fields, image, timestamp, footer }) {
   const embed = new EmbedBuilder();
 
   if (fields.length > 25) return new Error("Cannot have more than 25 fields");
