@@ -222,9 +222,11 @@ module.exports = {
       if (definitionPagesRaw === false) return embedReply("No definition found", `Could not find urban definition of word "${word}"`);
     } else if (!isUrban && args[1] == null) {
       definitionPagesRaw = await getDictWord(word);
-      if (definitionPagesRaw === false) definitionPagesRaw = await getUrbanDictWord(word);
+      if (definitionPagesRaw === false) {
+        definitionPagesRaw = await getUrbanDictWord(word);
+        isUrban = true;
+      }
       if (definitionPagesRaw === false) return embedReply("No definition found", `Could not find definitions of word "${word}"`);
-      isUrban = true;
     } else if (!isUrban && args[1] === false) {
       definitionPagesRaw = await getDictWord(word);
       if (definitionPagesRaw === false) return embedReply("No definition found", `Could not find definition of word "${word}"`);
@@ -372,9 +374,12 @@ module.exports = {
     });
 
     collector.on("end", () => {
-      message.edit({
-        components: [],
-      });
+      message
+        .edit({
+          components: [],
+        })
+        .catch(() => {});
+
       activeDefinitions.delete(message.id);
     });
   },
