@@ -2,7 +2,6 @@ if (process.env.NODE_ENV !== "production") require("dotenv").config();
 
 const { Client, IntentsBitField } = require("discord.js");
 const { ActivityType } = require("discord-api-types/v10");
-const { Manager } = require("erela.js");
 const mongoose = require("mongoose");
 
 const commandHandler = require("./commandHandler.js");
@@ -21,6 +20,14 @@ const client = new Client({
     IntentsBitField.Flags.GuildVoiceStates,
     IntentsBitField.Flags.GuildMembers,
   ],
+  presence: {
+    activities: [
+      {
+        name: config.prefix + "help",
+        type: ActivityType.Listening,
+      },
+    ],
+  },
 });
 
 client.on("raw", (d) => client.manager.updateVoiceState(d));
@@ -54,6 +61,4 @@ db.on("disconnected", () => {
   await commandHandler.initialize(client, { prefix: config.prefix });
   await eventHandler.initialize(client);
   await client.login(process.env.TOKEN);
-
-  client.user.setActivity(config.prefix + "help", { type: ActivityType.Listening });
 })();

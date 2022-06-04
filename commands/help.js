@@ -1,4 +1,4 @@
-const { EmbedBuilder, formatEmoji } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   id: "help",

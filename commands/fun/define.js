@@ -2,10 +2,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, MessageComponentInteracti
 const { load } = require("cheerio");
 const fetch = require("node-fetch");
 const { colors } = require("../../config.json");
-/**
- * @type {Map<string, InteractionCollector<MessageComponentInteraction>>}
- */
-const activeChannelCollectors = new Map();
+
 /**
       * @type {Map<string, {
           isUrban: boolean,
@@ -20,14 +17,9 @@ const activeChannelCollectors = new Map();
             textPhonetic: string
           }
         }>}
-      */
+*/
 const activeDefinitions = new Map();
 
-function createUrbanDictEmbed(definition) {
-  const embed = new EmbedBuilder().setTitle(`Definition of "${definition.word}"`).setDescription(`Lorem`).setColor(colors.primary);
-
-  return embed;
-}
 /**
    * @param definition {{
       word: string,
@@ -37,7 +29,7 @@ function createUrbanDictEmbed(definition) {
       antonyms: string[],
       textPhonetic: string
     }}
-   */
+*/
 function createDictEmbed(raw, definition, innerIndex = 0) {
   const embed = new EmbedBuilder()
     .setTitle(`Definition of "${definition.word}"`)
@@ -96,42 +88,104 @@ async function getDictWord(word = "") {
 
   return pages;
 }
+
+function createUrbanDictEmbed(raw, definition) {
+  const embed = new EmbedBuilder()
+    .setTitle(`Definition of "${definition.word}"`)
+    .setDescription(definition.definition)
+    .setColor(colors.primary)
+    .setFooter({
+      text: `Page ${(raw.index ?? 0) + 1}/${raw.definitions?.length ?? raw.length}`,
+    });
+
+  embed.addFields([
+    {
+      name: "Example",
+      value: definition.example,
+    },
+    {
+      name: "Upvotes",
+      value: definition.upvotes,
+      inline: true,
+    },
+    {
+      name: "Downvotes",
+      value: definition.downvotes,
+      inline: true,
+    },
+    {
+      name: "Author",
+      value: definition.contributor,
+      inline: true,
+    },
+  ]);
+
+  return embed;
+}
 async function getUrbanDictWord(word = "") {
-  const html = await (await fetch(`https://www.urbandictionary.com/define.php?term=${word}`)).text();
-  const $ = load(html);
+  const request = await fetch(`https://www.urbandictionary.com/define.php?term=${word}`);
 
-  const definitions = $("div.meaning");
-  const authors = $("div.contributor > a");
-  const examples = $("div.example");
-  const ids = $("div.definition")?.attr("data-defid");
-
-  const definitionPages = [];
-
-  for (let i = 0; i < definitions.length; i++) {
-    const definition = definitions[i];
+  switch (request.status) {
+    case 404:
+      return false;
+      break;
   }
 
-  // const data = await fetch(`https://api.urbandictionary.com/v0/uncacheable?ids=${ids}`);
-  // const json = await data.json();
-  // const upvotes = json.thumbs[0]?.up ?? "";
-  // const downvotes = json.thumbs[0]?.down ?? "";
+  const html = await request.text();
 
-  // const pages = [
-  //   {
-  //     author,
-  //     definition,
-  //     example,
-  //     id,
-  //     upvotes,
-  //     downvotes,
-  //   },
-  // ];
+  const $ = load(html);
 
-  // console.log(definitions);
+  const definitionElements = $(".definition");
 
-  // return pages;
+  const definitions = [];
+  const definitionIds = [];
 
-  return false;
+  function siftDefinitionElements(definition) {
+    const id = definition.attribs["data-defid"];
+
+    const wordEl = definition.childNodes[0].childNodes[0].childNodes[0];
+    const meaningEl = definition.childNodes[0].childNodes[1];
+    const exampleEl = definition.childNodes[0].childNodes[2];
+    const contributorEl = definition.childNodes[0].childNodes[3];
+
+    definitionIds.push(id);
+
+    definitions.push({
+      id,
+      word: $.text(wordEl.children).slice(0, 240),
+      definition: $.text(meaningEl.children).slice(0, 4096),
+      example: $.text(exampleEl.children).slice(0, 1024),
+      contributor: $.text(contributorEl.childNodes[1].children).slice(0, 1024),
+      upvotes: null,
+      downvotes: null,
+    });
+  }
+
+  async function insertDefinitionData(ids = []) {
+    const apiData = await fetch(`https://api.urbandictionary.com/v0/uncacheable?ids=${ids.join(",")}`);
+    const definitionJson = await apiData.json();
+
+    for (let i = 0; i < definitionJson.thumbs.length; i++) {
+      const thumb = definitionJson.thumbs[i];
+
+      const id = thumb.defid;
+
+      const definition = definitions.find((def) => def.id === id.toString());
+
+      const upvotes = thumb?.up ?? "";
+      const downvotes = thumb?.down ?? "";
+      definition.upvotes = upvotes.toString();
+      definition.downvotes = downvotes.toString();
+    }
+  }
+
+  for (let i = 0; i < definitionElements.length; i++) {
+    siftDefinitionElements(definitionElements[i]);
+  }
+
+  await insertDefinitionData(definitionIds);
+
+  return definitions;
 }
 
 module.exports = {
@@ -159,7 +213,6 @@ module.exports = {
     let isUrban = args[1] == null ? false : true;
 
     let definitionPagesRaw = isUrban ? await getUrbanDictWord(word) : await getDictWord(word);
-
     if (!isUrban && args[1] !== false && definitionPagesRaw === false) {
       definitionPagesRaw = await getUrbanDictWord(word);
       if (definitionPagesRaw === false) {
@@ -211,39 +264,55 @@ module.exports = {
 
       const activeDefinition = activeDefinitions.get(message.id);
 
+      function checkButtons() {
+        if (activeDefinition.definitions.length === activeDefinition.index + 1) {
+          components.components[1].setDisabled(true);
+        } else {
+          components.components[1].setDisabled(false);
+        }
+        if (activeDefinition.index === 0) {
+          components.components[0].setDisabled(true);
+        } else {
+          components.components[0].setDisabled(false);
+        }
+        if (activeDefinition.isUrban) return;
+        if (activeDefinition.definitions[activeDefinition.index].definitions.length === activeDefinition.innerIndex + 1) {
+          components.components[3].setDisabled(true);
+        } else {
+          components.components[3].setDisabled(false);
+        }
+        if (activeDefinition.innerIndex === 0) {
+          components.components[2].setDisabled(true);
+        } else {
+          components.components[2].setDisabled(false);
+        }
+      }
+
       if (activeDefinition.isUrban) {
         switch (i.customId) {
           case "prev": {
+            if (activeDefinition.index === 0) return i.reply({ content: "Reached start of pages", ephemeral: true });
+
+            --activeDefinition.index;
+            checkButtons();
+            await i.update({
+              embeds: [createUrbanDictEmbed(activeDefinition, activeDefinition.definitions[activeDefinition.index])],
+              components: [components],
+            });
             break;
           }
           case "next": {
+            if (activeDefinition.definitions.length === activeDefinition.index + 1) return i.reply({ content: "Reached end of pages", ephemeral: true });
+            ++activeDefinition.index;
+            checkButtons();
+            await i.update({
+              embeds: [createUrbanDictEmbed(activeDefinition, activeDefinition.definitions[activeDefinition.index])],
+              components: [components],
+            });
             break;
           }
         }
       } else {
-        function checkButtons() {
-          if (activeDefinition.definitions.length === activeDefinition.index + 1) {
-            components.components[1].setDisabled(true);
-          } else {
-            components.components[1].setDisabled(false);
-          }
-          if (activeDefinition.index === 0) {
-            components.components[0].setDisabled(true);
-          } else {
-            components.components[0].setDisabled(false);
-          }
-          if (activeDefinition.definitions[activeDefinition.index].definitions.length === activeDefinition.innerIndex + 1) {
-            components.components[3].setDisabled(true);
-          } else {
-            components.components[3].setDisabled(false);
-          }
-          if (activeDefinition.innerIndex === 0) {
-            components.components[2].setDisabled(true);
-          } else {
-            components.components[2].setDisabled(false);
-          }
-        }
-
         switch (i.customId) {
           case "prev": {
             if (activeDefinition.index === 0) return i.reply({ content: "Reached start of pages", ephemeral: true });
@@ -300,6 +369,7 @@ module.exports = {
       message.edit({
         components: [],
       });
+      activeDefinitions.delete(message.id);
     });
   },
 };

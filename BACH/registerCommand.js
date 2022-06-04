@@ -88,7 +88,7 @@ async function registerCommand(client, cmd) {
     for (let i = 0; i < command.permissions.length; i++) {
       const permission = command.permissions[i];
       if (!permissionsList.includes(permission))
-        return console.error(
+        throw new Error(
           `\n------------------------------------\n!!! Invalid permission '${permission}' in command '${command.id}'\n------------------------------------\n`
         );
     }
