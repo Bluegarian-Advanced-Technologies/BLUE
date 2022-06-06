@@ -1,15 +1,12 @@
-const { EmbedBuilder } = require("discord.js");
-
-function createEmbed() {}
-
 module.exports = {
-  id: "stop",
-  description: "Stops playing whatever is playing",
+  id: "skip",
+  description: "Skips the current track",
   category: "Music",
-  aliases: [],
+  aliases: ["s"],
   slash: "both",
+  permissions: ["Speak", "Connect"],
   expectedArgs: [],
-  execute: async (cmd, { client, guildId, member, embedReply }) => {
+  async execute(command, { client, guildId, member, embedReply }) {
     const vc = member.voice?.channel?.id;
     if (vc == null) return embedReply("Not connected to V.C.", "You must be connected to a voice channel to use this command.", "error");
 
@@ -18,9 +15,7 @@ module.exports = {
     if (player.voiceChannel !== vc)
       return embedReply("Not in corresponding V.C.", "You must be connected to the same voice channel as the bot to use this command.", "error");
 
-    player.queue.clear();
     player.stop();
-
-    embedReply("Stopped playback and cleared queue");
+    embedReply("⏩ Skipped");
   },
 };

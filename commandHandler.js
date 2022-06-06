@@ -96,6 +96,20 @@ async function initialize(client, config = {}) {
     const command = findTextCommand(args[0].toLowerCase());
     if (!command) return;
 
+    function sendMessage(content = "", ping = false, options = {}) {
+      content == null ? null : content.substring(0, 2000);
+
+      const reply = {
+        content,
+        allowedMentions: {
+          repliedUser: ping,
+        },
+        ...options,
+      };
+
+      return message.channel.send(reply);
+    }
+
     function messageReply(content = "", ping = false, options = {}) {
       content == null ? null : content.substring(0, 2000);
 
@@ -175,6 +189,11 @@ async function initialize(client, config = {}) {
     function validateArg(expectedArg, i) {
       switch (expectedArg.type.toLowerCase()) {
         case "string": {
+          if (expectedArg.trailing) {
+            const newargs = args.join(" ").match(/"([^"\\]*(?:\\.[^"\\]*)*)"|\S+/g);
+            args.splice(i, newargs.length - 1);
+            return (args[i] = newargs[i].replace(/"/g, ""));
+          }
           return (args[i] = args[i].trim());
         }
         case "integer": {
@@ -272,6 +291,7 @@ async function initialize(client, config = {}) {
     const validationResult = command.subcommanded
       ? validateSubcommand(command.expectedArgs.find((subcommandRaw) => subcommandRaw.name === subcommand))
       : command.expectedArgs.map((expectedArg, i) => {
+          console.log(args);
           if (args[i] == null && expectedArg[i + 1]?.required == null) return;
           if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
           if (expectedArg.options) {
@@ -303,6 +323,7 @@ async function initialize(client, config = {}) {
       channel: message.channel,
       channelId: message.channelId,
       isInteraction: false,
+      send: sendMessage,
       reply: messageReply,
       embedReply: embedMessageReply,
       args,
@@ -329,6 +350,20 @@ async function initialize(client, config = {}) {
     }
 
     const user = client.BACH.users.getAll().find((userObj) => userObj.userId === interaction.user.id);
+
+    function sendMessage(content = "", ping = false, options = {}) {
+      content == null ? null : content.substring(0, 2000);
+
+      const reply = {
+        content,
+        allowedMentions: {
+          repliedUser: ping,
+        },
+        ...options,
+      };
+
+      return interaction.channel.send(reply);
+    }
 
     function interactionReply(content = "", ephemeral = false, options = {}) {
       content == null ? null : content.substring(0, 2000);
@@ -435,17 +470,18 @@ async function initialize(client, config = {}) {
       channelId: interaction.channelId,
       isInteraction: true,
       subcommand,
+      send: sendMessage,
       reply: interactionReply,
       embedReply: embedInteractionReply,
       args,
     };
 
-    // try {
-    await command.execute(interaction, props);
-    // } catch (error) {
-    //   console.error(chalk.default.red(`${error}`));
-    //   await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
-    // }
+    try {
+      await command.execute(interaction, props);
+    } catch (error) {
+      console.error(chalk.default.red(`${error}`));
+      await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
+    }
   });
 }
 

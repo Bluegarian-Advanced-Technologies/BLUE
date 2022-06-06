@@ -1,15 +1,13 @@
-const { EmbedBuilder } = require("discord.js");
-
-function createEmbed() {}
+const pause = require("./pause.js");
 
 module.exports = {
-  id: "stop",
-  description: "Stops playing whatever is playing",
-  category: "Music",
-  aliases: [],
+  id: "resume",
+  description: "Resumes the playback",
+  category: "music",
+  aliases: ["r"],
   slash: "both",
   expectedArgs: [],
-  execute: async (cmd, { client, guildId, member, embedReply }) => {
+  async execute(cmd, { client, member, guildId, embedReply }) {
     const vc = member.voice?.channel?.id;
     if (vc == null) return embedReply("Not connected to V.C.", "You must be connected to a voice channel to use this command.", "error");
 
@@ -18,9 +16,9 @@ module.exports = {
     if (player.voiceChannel !== vc)
       return embedReply("Not in corresponding V.C.", "You must be connected to the same voice channel as the bot to use this command.", "error");
 
-    player.queue.clear();
-    player.stop();
+    if (player.playing) return embedReply(`Already playing`, null, "warn");
 
-    embedReply("Stopped playback and cleared queue");
+    player.pause(false);
+    return embedReply(`Resumed the playback`);
   },
 };

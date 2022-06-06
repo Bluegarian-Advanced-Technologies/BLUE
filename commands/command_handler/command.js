@@ -193,8 +193,7 @@ module.exports = {
       }
 
       case "channelonly": {
-        if (command.disableExempted)
-          return embedReply("Cannot restrict command", "This command is exempted from being restricted for saftey purposes.", "error");
+        let command;
 
         let dynamicChannel;
 
@@ -203,12 +202,21 @@ module.exports = {
           if (!args[1].isTextBased())
             return embedReply("Not a Text Channel", "Channel categories are not supported yet, please select a text channel based channel instead.", "warn");
         } else {
-          console.log(args[1]);
           dynamicChannel = args[1][1];
         }
-
         const targetChannel = dynamicChannel;
         const targetCommand = args[2].toLowerCase();
+
+        if (isInteraction) {
+          command = client.BACH.commands.get(targetCommand.toLowerCase());
+          if (!command) return embedReply("Command non-existent", null, "warn");
+        } else {
+          command = findTextCommand(client, targetCommand);
+          if (!command) return embedReply("Command non-existent", null, "warn");
+        }
+
+        if (command.disableExempted)
+          return embedReply("Cannot restrict command", "This command is exempted from being restricted for saftey purposes.", "error");
 
         if (!checkCommandExists(client, isInteraction, targetCommand)) return embedReply("Command non-existent", null, "warn");
 
@@ -234,7 +242,7 @@ module.exports = {
                     if (!command.channels.includes(targetChannel))
                       return embedReply("Command not restricted", "This command is not restricted to this channel yet.", "warn");
                     for (let i = 0; i < command.channels.length; ++i) {
-                      if (command.channels[i] === targetCommand) {
+                      if (command.channels[i] === targetChannel) {
                         command.channels.splice(i, 1);
 
                         server.markModified("channels");

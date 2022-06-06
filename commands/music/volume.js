@@ -1,11 +1,7 @@
-const { EmbedBuilder } = require("discord.js");
-
-function createEmbed() {}
-
 module.exports = {
   id: "volume",
   description: "Sets the volume of the player",
-  category: "music",
+  category: "Music",
   aliases: [],
   slash: "both",
   expectedArgs: [
@@ -16,10 +12,15 @@ module.exports = {
       required: true,
     },
   ],
-  async execute(cmd, { client, guildId, channel, channelId, args, member }) {
-    const player = client.manager.players.get(guildId);
-    if (!player) return cmd.reply("There is no music playing");
-    if (player.voiceChannel !== member.voice.channel.id) return cmd.reply("You're not in the same voice channel as the music player");
+  async execute(cmd, { client, guildId, args, member, embedReply }) {
+    const vc = member.voice?.channel?.id;
+    if (vc == null) return embedReply("Not connected to V.C.", "You must be connected to a voice channel to use this command.", "error");
+
+    const player = client.audioManager.players.get(guildId);
+    if (!player) return embedReply("Not connected to V.C.", "The bot is not connected to the voice channel.", "error");
+    if (player.voiceChannel !== vc)
+      return embedReply("Not in corresponding V.C.", "You must be in the same voice channel as the bot to use this command.", "error");
+
     if (args[0] < 0 || args[0] > 2000) return cmd.reply("The volume must be between 0 and 2000");
     player.setVolume(args[0]);
     cmd.reply(`Set the volume to ${args[0]}%`);

@@ -5,7 +5,7 @@ module.exports = {
   disableExempted: true,
   execute: async (event, { client }) => {
     // Init music manager
-    client.manager.init(client.user.id);
+    client.audioManager.init(client.user.id);
 
     // Hardcode myself as almighty
 

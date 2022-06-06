@@ -30,7 +30,6 @@ const client = new Client({
   },
 });
 
-client.on("raw", (d) => client.manager.updateVoiceState(d));
 client.once("ready", async () => {
   const chalk = await import("chalk");
   console.log(
@@ -61,4 +60,5 @@ db.on("disconnected", () => {
   await commandHandler.initialize(client, { prefix: config.prefix });
   await eventHandler.initialize(client);
   await client.login(process.env.TOKEN);
+  client.on("raw", (data) => client.audioManager.updateVoiceState(data));
 })();
