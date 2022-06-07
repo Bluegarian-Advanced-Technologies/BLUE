@@ -16,7 +16,8 @@ module.exports = {
     if (player.voiceChannel !== vc)
       return embedReply("Not in corresponding V.C.", "You must be connected to the same voice channel as the bot to use this command.", "error");
 
-    player.destroy();
     embedReply("👋 Goodbye");
+    client.expectedAudioEvents.set(guildId, "disconnect");
+    player.destroy();
   },
 };

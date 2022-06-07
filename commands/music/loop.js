@@ -4,10 +4,11 @@ module.exports = {
   category: "Music",
   aliases: ["repeat"],
   slash: "both",
+  permissions: ["Speak", "Connect"],
   expectedArgs: [
     {
       type: "String",
-      name: "looptype",
+      name: "loop_type",
       description: "Loops the track or queue",
       required: true,
       options: [

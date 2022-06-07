@@ -74,12 +74,15 @@ module.exports = {
         });
       })
       .on("queueEnd", (player) => {
+        if (client.expectedAudioEvents.get(player.guild) === "queueend") return client.expectedAudioEvents.delete(player.guild);
         client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Queue has ended")] });
       })
       .on("playerDestroy", (player) => {
+        if (client.expectedAudioEvents.get(player.guild) === "disconnect") return client.expectedAudioEvents.delete(player.guild);
         client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Disconnected from voice channel")] });
       });
     client.playStore = new Map();
+    client.expectedAudioEvents = new Map();
   },
   async execute(cmd, { client, guildId, channelId, user, member, isInteraction, embedReply, reply, args }) {
     let song = args[0];
@@ -117,6 +120,7 @@ module.exports = {
       player.connect();
 
       player.queue.add(results.tracks[0]);
+
       reply(null, false, {
         embeds: [
           createMusicEmbed({

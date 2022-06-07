@@ -4,6 +4,7 @@ module.exports = {
   category: "Music",
   aliases: [],
   slash: "both",
+  permissions: ["Speak", "Connect"],
   expectedArgs: [],
   async execute(cmd, { client, guildId, member, embedReply }) {
     const vc = member.voice?.channel?.id;

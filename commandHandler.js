@@ -85,214 +85,194 @@ async function initialize(client, config = {}) {
   }
 
   client.on("messageCreate", async (message) => {
-    if (message.author.bot) return;
-    if (message.content.startsWith(`<@${client.user.id}>`) || message.content.startsWith(`<@!${client.user.id}>`))
-      return client.BACH.commands.get("help").execute(message, { client, config: botConfig, reply: messageReply });
-    if (!message.content.startsWith(prefix)) return;
+    try {
+      if (message.author.bot) return;
+      if (message.content.startsWith(`<@${client.user.id}>`) || message.content.startsWith(`<@!${client.user.id}>`))
+        return client.BACH.commands.get("help").execute(message, { client, config: botConfig, reply: messageReply });
+      if (!message.content.startsWith(prefix)) return;
 
-    const user = client.BACH.users.getAll().find((userObj) => userObj.userId === message.author.id);
+      const user = client.BACH.users.getAll().find((userObj) => userObj.userId === message.author.id);
 
-    const args = message.content.slice(prefix.length).trim().split(/ +/g);
-    const command = findTextCommand(args[0].toLowerCase());
-    if (!command) return;
+      const args = message.content.slice(prefix.length).trim().split(/ +/g);
+      const command = findTextCommand(args[0].toLowerCase());
+      if (!command) return;
 
-    function sendMessage(content = "", ping = false, options = {}) {
-      content == null ? null : content.substring(0, 2000);
+      function sendMessage(content = "", ping = false, options = {}) {
+        content == null ? null : content.substring(0, 2000);
 
-      const reply = {
-        content,
-        allowedMentions: {
-          repliedUser: ping,
-        },
-        ...options,
-      };
+        const reply = {
+          content,
+          allowedMentions: {
+            repliedUser: ping,
+          },
+          ...options,
+        };
 
-      return message.channel.send(reply);
-    }
+        return message.channel.send(reply);
+      }
 
-    function messageReply(content = "", ping = false, options = {}) {
-      content == null ? null : content.substring(0, 2000);
+      function messageReply(content = "", ping = false, options = {}) {
+        content == null ? null : content.substring(0, 2000);
 
-      const reply = {
-        content,
-        allowedMentions: {
-          repliedUser: ping,
-        },
-        ...options,
-      };
+        const reply = {
+          content,
+          allowedMentions: {
+            repliedUser: ping,
+          },
+          ...options,
+        };
 
-      return message.reply(reply);
-    }
+        return message.reply(reply);
+      }
 
-    function embedMessageReply(title, text, status, ping = false, options = {}) {
-      const reply = {
-        embeds: [embedMessage(title, text, status)],
-        allowedMentions: {
-          repliedUser: ping,
-        },
-        ...options,
-      };
+      function embedMessageReply(title, text, status, ping = false, options = {}) {
+        const reply = {
+          embeds: [embedMessage(title, text, status)],
+          allowedMentions: {
+            repliedUser: ping,
+          },
+          ...options,
+        };
 
-      return message.reply(reply);
-    }
+        return message.reply(reply);
+      }
 
-    if (command.elevation > (user?.elevation + 1 || 2) - 1)
-      return embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
+      if (command.elevation > (user?.elevation + 1 || 2) - 1)
+        return embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
-    const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
-    if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id) && message.author.id !== client.application.owner.id)
-      return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
+      const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
+      if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id) && message.author.id !== client.application.owner.id)
+        return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
 
-    if (
-      command.permissions != null &&
-      !command.permissions.every((flag) => message.member.permissions.has(PermissionsBitField.Flags[flag])) &&
-      message.author.id !== client.application.owner.id
-    )
-      return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
+      if (
+        command.permissions != null &&
+        !command.permissions.every((flag) => message.member.permissions.has(PermissionsBitField.Flags[flag])) &&
+        message.author.id !== client.application.owner.id
+      )
+        return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
 
-    const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === message.guildId);
-    const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
+      const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === message.guildId);
+      const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
 
-    if (
-      restrictedRoles != null &&
-      restrictedRolesCommand != null &&
-      !restrictedRolesCommand.roles.every((role) => message.member.roles.cache.has(role)) &&
-      message.author.id !== client.application.owner.id
-    )
-      return embedMessageReply(
-        "Insufficient roles",
-        `You require the following roles to use this command: ${restrictedRolesCommand.roles.reduce((total, value) => {
-          return total + "\n<@&" + value + ">";
-        }, "\n")}`,
-        "error"
-      );
+      if (
+        restrictedRoles != null &&
+        restrictedRolesCommand != null &&
+        !restrictedRolesCommand.roles.every((role) => message.member.roles.cache.has(role)) &&
+        message.author.id !== client.application.owner.id
+      )
+        return embedMessageReply(
+          "Insufficient roles",
+          `You require the following roles to use this command: ${restrictedRolesCommand.roles.reduce((total, value) => {
+            return total + "\n<@&" + value + ">";
+          }, "\n")}`,
+          "error"
+        );
 
-    const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === message.guildId);
-    const restrictedChannelCommands = restrictedChannel?.commands?.find((cmd) => cmd.command === command.id);
+      const restrictedChannel = client.BACH.restrictedChannels.getAll().find((doc) => doc.guildId === message.guildId);
+      const restrictedChannelCommands = restrictedChannel?.commands?.find((cmd) => cmd.command === command.id);
 
-    if (
-      restrictedChannel != null &&
-      restrictedChannelCommands != null &&
-      !restrictedChannelCommands?.channels.includes(message.channelId) &&
-      message.author.id !== client.application.owner.id
-    )
-      return embedMessageReply(
-        "Command restricted",
-        `This command can only be run in the following channels: ${restrictedChannelCommands.channels.reduce((total, value) => {
-          return total + "\n<#" + value + ">";
-        }, "\n")}`,
-        "error"
-      );
+      if (
+        restrictedChannel != null &&
+        restrictedChannelCommands != null &&
+        !restrictedChannelCommands?.channels.includes(message.channelId) &&
+        message.author.id !== client.application.owner.id
+      )
+        return embedMessageReply(
+          "Command restricted",
+          `This command can only be run in the following channels: ${restrictedChannelCommands.channels.reduce((total, value) => {
+            return total + "\n<#" + value + ">";
+          }, "\n")}`,
+          "error"
+        );
 
-    args.shift();
+      args.shift();
 
-    function validateArg(expectedArg, i) {
-      switch (expectedArg.type.toLowerCase()) {
-        case "string": {
-          if (expectedArg.trailing) {
-            const newargs = args.join(" ").match(/"([^"\\]*(?:\\.[^"\\]*)*)"|\S+/g);
-            args.splice(i, newargs.length - 1);
-            return (args[i] = newargs[i].replace(/"/g, ""));
+      function validateArg(expectedArg, i) {
+        switch (expectedArg.type.toLowerCase()) {
+          case "string": {
+            if (expectedArg.trailing) {
+              if (!args.join(" ").includes('"')) return;
+              const newargs = args.join(" ").match(/"([^"\\]*(?:\\.[^"\\]*)*)"|\S+/g);
+              console.log(newargs);
+              args.splice(i, newargs.length - 1);
+              console.log(args);
+              return (args[i] = newargs[i].replace(/"/g, ""));
+            }
+            return (args[i] = args[i].trim());
           }
-          return (args[i] = args[i].trim());
-        }
-        case "integer": {
-          const int = parseInt(args[i]);
-          if (isNaN(int)) {
-            return new Error(`Not a integer: integer expected at argument ${i + 1}: ${expectedArg.name}`);
+          case "integer": {
+            const int = parseInt(args[i]);
+            if (isNaN(int)) {
+              return new Error(`Not an integer: integer expected at argument ${i + 1}: ${expectedArg.name}`);
+            }
+            if (expectedArg.min != null)
+              if (int < expectedArg.min) return new Error(`Integer smaller than min value of ${expectedArg.min}: at argument ${i + 1}: ${expectedArg.name}`);
+            if (expectedArg.max != null)
+              if (int > expectedArg.max) return new Error(`Integer smaller than max value of ${expectedArg.max}: at argument ${i + 1}: ${expectedArg.name}`);
+            return (args[i] = int);
           }
-          if (expectedArg.min != null)
-            if (int < expectedArg.min) return new Error(`Integer smaller than min value of ${expectedArg.min}: at argument ${i + 1}: ${expectedArg.name}`);
-          if (expectedArg.max != null)
-            if (int > expectedArg.max) return new Error(`Integer smaller than max value of ${expectedArg.max}: at argument ${i + 1}: ${expectedArg.name}`);
-          return (args[i] = int);
-        }
-        case "number": {
-          const num = parseFloat(args[i]);
-          if (isNaN(num)) {
-            return new Error(`Not a number: number expected at argument ${i + 1}: ${expectedArg.name}`);
+          case "number": {
+            const num = parseFloat(args[i]);
+            if (isNaN(num)) {
+              return new Error(`Not a number: number expected at argument ${i + 1}: ${expectedArg.name}`);
+            }
+            if (expectedArg.min != null)
+              if (num < expectedArg.min) return new Error(`Number smaller than min value of ${expectedArg.min}: at argument ${i + 1}: ${expectedArg.name}`);
+            if (expectedArg.max != null)
+              if (num > expectedArg.max) return new Error(`Number smaller than max value of ${expectedArg.max}: at argument ${i + 1}: ${expectedArg.name}`);
+            return (args[i] = num);
           }
-          if (expectedArg.min != null)
-            if (num < expectedArg.min) return new Error(`Number smaller than min value of ${expectedArg.min}: at argument ${i + 1}: ${expectedArg.name}`);
-          if (expectedArg.max != null)
-            if (num > expectedArg.max) return new Error(`Number smaller than max value of ${expectedArg.max}: at argument ${i + 1}: ${expectedArg.name}`);
-          return (args[i] = num);
-        }
-        case "boolean": {
-          const bool = checkBoolean(args[i]);
-          if (typeof bool !== "boolean") {
-            return new Error(`Not a boolean: boolean expected at argument ${i + 1}: ${expectedArg.name}`);
+          case "boolean": {
+            const bool = checkBoolean(args[i]);
+            if (typeof bool !== "boolean") {
+              return new Error(`Not a boolean: boolean expected at argument ${i + 1}: ${expectedArg.name}`);
+            }
+            return (args[i] = bool);
           }
-          return (args[i] = bool);
-        }
-        case "user": {
-          const user = args[i].match(/<@!?(\d+)>/);
-          if (!user) {
-            return new Error(`Not a user: user expected at argument ${i + 1}: ${expectedArg.name}`);
+          case "user": {
+            const user = args[i].match(/<@!?(\d+)>/);
+            if (!user) {
+              return new Error(`Not a user: user expected at argument ${i + 1}: ${expectedArg.name}`);
+            }
+            return (args[i] = user);
           }
-          return (args[i] = user);
-        }
-        case "channel": {
-          const channel = args[i].match(/<#(\d+)>/);
-          if (!channel) {
-            return new Error(`Not a channel: channel expected at argument ${i + 1}: ${expectedArg.name}"`);
+          case "channel": {
+            const channel = args[i].match(/<#(\d+)>/);
+            if (!channel) {
+              return new Error(`Not a channel: channel expected at argument ${i + 1}: ${expectedArg.name}"`);
+            }
+            return (args[i] = channel);
           }
-          return (args[i] = channel);
-        }
-        case "role": {
-          const role = args[i].match(/<@&(\d+)>/);
-          if (!role) {
-            return new Error(`Not a role: role expected at argument ${i + 1}: ${expectedArg.name}`);
+          case "role": {
+            const role = args[i].match(/<@&(\d+)>/);
+            if (!role) {
+              return new Error(`Not a role: role expected at argument ${i + 1}: ${expectedArg.name}`);
+            }
+            return (args[i] = role);
           }
-          return (args[i] = role);
-        }
-        case "mentionable": {
-          const mentionable = args[i].match(/<@(!|#|&)?(\d+)>/);
-          if (!mentionable) {
-            return new Error(`Not a mentionable: mentionable expected at argument: ${i + 1}, ${expectedArg.name}`);
+          case "mentionable": {
+            const mentionable = args[i].match(/<@(!|#|&)?(\d+)>/);
+            if (!mentionable) {
+              return new Error(`Not a mentionable: mentionable expected at argument: ${i + 1}, ${expectedArg.name}`);
+            }
+            return (args[i] = mentionable);
           }
-          return (args[i] = mentionable);
-        }
 
-        default: {
-          console.warn("Invalid arg type");
-          return new Error(`Invalid arg type at argument ${i + 1}: ${expectedArg.name}`);
+          default: {
+            console.warn("Invalid arg type");
+            return new Error(`Invalid arg type at argument ${i + 1}: ${expectedArg.name}`);
+          }
         }
       }
-    }
 
-    let subcommand = args[0]?.toLowerCase();
+      let subcommand = args[0]?.toLowerCase();
 
-    function validateSubcommand(subcommandRaw) {
-      if (subcommandRaw == null)
-        return [
-          new Error(`Unknown sub command, expected ${command.expectedArgs.reduce((total, value) => (total += value.name + "|"), command.expectedArgs[0])}`),
-        ];
-      args.shift();
-      const result = subcommandRaw.expectedArgs.map((expectedArg, i) => {
-        if (args[i] == null && expectedArg[i + 1]?.required == null) return;
-        if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
-        if (expectedArg.options) {
-          const optionsList = [];
-
-          for (let o = 0, n = expectedArg.options.length; o < n; ++o) {
-            if (expectedArg.options[o].name.toLowerCase() === args[i].toLowerCase()) return (args[i] = expectedArg.options[o].value);
-            optionsList.push(expectedArg.options[o].name);
-          }
-          return new Error(`Not ${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`);
-        }
-
-        return validateArg(expectedArg, i);
-      });
-
-      return result;
-    }
-
-    const validationResult = command.subcommanded
-      ? validateSubcommand(command.expectedArgs.find((subcommandRaw) => subcommandRaw.name === subcommand))
-      : command.expectedArgs.map((expectedArg, i) => {
-          console.log(args);
-          if (args[i] == null && expectedArg[i + 1]?.required == null) return;
+      function validateSubcommand(subcommandRaw) {
+        if (subcommandRaw == null)
+          return [new Error(`Unknown sub command, expected ${command.expectedArgs.reduce((total, value) => total + value.name + " | ", "")}`)];
+        args.shift();
+        const result = subcommandRaw.expectedArgs.map((expectedArg, i) => {
+          if (args[i] == null && expectedArg[i + 1]?.required == null) return new Error(`${expectedArg.name} is required`);
           if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
           if (expectedArg.options) {
             const optionsList = [];
@@ -301,38 +281,71 @@ async function initialize(client, config = {}) {
               if (expectedArg.options[o].name.toLowerCase() === args[i].toLowerCase()) return (args[i] = expectedArg.options[o].value);
               optionsList.push(expectedArg.options[o].name);
             }
-            return new Error(`Not ${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`);
+            return new Error(`${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`);
           }
 
           return validateArg(expectedArg, i);
         });
 
-    for (const a of validationResult) {
-      if (a instanceof Error) {
-        return message.channel.send(a.message);
+        return result;
       }
-    }
 
-    const props = {
-      client,
-      config: botConfig,
-      guild: message.guild,
-      guildId: message.guildId,
-      user: message.author,
-      member: message.member,
-      channel: message.channel,
-      channelId: message.channelId,
-      isInteraction: false,
-      send: sendMessage,
-      reply: messageReply,
-      embedReply: embedMessageReply,
-      args,
-    };
+      const validationResult = command.subcommanded
+        ? validateSubcommand(command.expectedArgs.find((subcommandRaw) => subcommandRaw.name === subcommand))
+        : command.expectedArgs.map((expectedArg, i) => {
+            console.log(args);
+            if (args[i] == null && expectedArg[i + 1]?.required == null) return new Error(`${expectedArg.name} is required`);
+            if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
+            if (expectedArg.options) {
+              const optionsList = [];
 
-    try {
-      await command.execute(message, props);
+              for (let o = 0, n = expectedArg.options.length; o < n; ++o) {
+                if (expectedArg.options[o].name.toLowerCase() === args[i].toLowerCase()) return (args[i] = expectedArg.options[o].value);
+                optionsList.push(expectedArg.options[o].name);
+              }
+              return new Error(`${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`);
+            }
+
+            return validateArg(expectedArg, i);
+          });
+
+      for (const a of validationResult) {
+        if (a instanceof Error) {
+          return embedMessageReply("Invalid usage!", a.message, "error", false);
+        }
+      }
+
+      const props = {
+        client,
+        config: botConfig,
+        guild: message.guild,
+        guildId: message.guildId,
+        user: message.author,
+        member: message.member,
+        channel: message.channel,
+        channelId: message.channelId,
+        isInteraction: false,
+        send: sendMessage,
+        reply: messageReply,
+        embedReply: embedMessageReply,
+        args,
+      };
+
+      try {
+        await command.execute(message, props);
+      } catch (err) {
+        console.error(err);
+        await message.reply({
+          content: `**FATAL EXCEPTION CAUGHT!**\n ||<@${client.application.owner.id}>||`,
+          embeds: [embedMessage(err.name, err.message, "error")],
+        });
+      }
     } catch (err) {
       console.error(err);
+      await message.reply({
+        content: `**FATAL EXCEPTION CAUGHT!**\n ||<@${client.application.owner.id}>||`,
+        embeds: [embedMessage(err.name, err.message, "error")],
+      });
     }
   });
 
@@ -478,9 +491,12 @@ async function initialize(client, config = {}) {
 
     try {
       await command.execute(interaction, props);
-    } catch (error) {
-      console.error(chalk.default.red(`${error}`));
-      await interaction.reply({ content: "Unfortunately, an error occured while executing this command.", ephemeral: true });
+    } catch (err) {
+      console.error(chalk.default.red(`${err}`));
+      await interaction.reply({
+        content: `**FATAL EXCEPTION CAUGHT!**\n ||<@${client.application.owner.id}>||`,
+        embeds: [embedMessage(err.name, err.message, "error")],
+      });
     }
   });
 }

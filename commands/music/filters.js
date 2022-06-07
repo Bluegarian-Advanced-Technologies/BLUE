@@ -4,6 +4,7 @@ module.exports = {
   category: "Music",
   aliases: ["f"],
   slash: "both",
+  permissions: ["Speak", "Connect"],
   expectedArgs: [
     {
       type: "String",
@@ -69,10 +70,10 @@ module.exports = {
 
     if (args[0] === "reset") {
       player.reset(null);
-      embedReply("Removed all filters");
+      embedReply("Removed all filters", "Allow a few seconds for the changes to apply");
     } else {
       player[args[0]] = !player[args[0]];
-      embedReply("Filter " /* + args[0] + " " */ + (player[args[0]] ? "added" : "removed"));
+      embedReply("Filter " + args[0] + " " + (player[args[0]] ? "added" : "removed"), "Allow a few seconds for the changes to apply");
     }
   },
 };

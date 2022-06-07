@@ -12,6 +12,17 @@ module.exports = {
       description: "Number of seconds to seek to",
       required: true,
     },
+    {
+      type: "String",
+      name: "relative",
+      description: "Seek forwards/backwards relative to current time in track",
+      options: [
+        {
+          name: "Yes",
+          value: "ye",
+        },
+      ],
+    },
   ],
   async execute(command, { client, guildId, member, args, embedReply }) {
     const vc = member.voice?.channel?.id;
@@ -23,8 +34,14 @@ module.exports = {
     if (player.voiceChannel !== vc)
       return embedReply("Not in corresponding V.C.", "You must be connected to the same voice channel as the bot to use this command.", "error");
 
-    player.seek(args[0] * 1000);
+    const isRelative = args[1] === "ye" && args[1] != null;
 
-    embedReply(`Seeked to ${args[0]} seconds`);
+    embedReply(`Seeked to ${isRelative ? Math.round((player.position + args[0] * 1000) / 1000) : args[0]} seconds`, "Allow a few seconds for seek to complete");
+
+    if (isRelative) {
+      player.seek(player.position + args[0] * 1000);
+    } else {
+      player.seek(args[0] * 1000);
+    }
   },
 };

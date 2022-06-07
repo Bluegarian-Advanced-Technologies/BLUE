@@ -4,6 +4,7 @@ module.exports = {
   category: "Music",
   aliases: [],
   slash: "both",
+  permissions: ["Speak", "Connect"],
   expectedArgs: [
     {
       type: "number",
@@ -22,7 +23,7 @@ module.exports = {
       return embedReply("Not in corresponding V.C.", "You must be in the same voice channel as the bot to use this command.", "error");
 
     if (args[0] < 0 || args[0] > 2000) return cmd.reply("The volume must be between 0 and 2000");
+    embedReply(`Set the volume to ${args[0]}%`);
     player.setVolume(args[0]);
-    cmd.reply(`Set the volume to ${args[0]}%`);
   },
 };

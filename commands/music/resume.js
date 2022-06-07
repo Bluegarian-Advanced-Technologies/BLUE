@@ -1,11 +1,10 @@
-const pause = require("./pause.js");
-
 module.exports = {
   id: "resume",
   description: "Resumes the playback",
   category: "music",
   aliases: ["r"],
   slash: "both",
+  permissions: ["Speak", "Connect"],
   expectedArgs: [],
   async execute(cmd, { client, member, guildId, embedReply }) {
     const vc = member.voice?.channel?.id;

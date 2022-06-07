@@ -1,17 +1,37 @@
-// module.exports = {
-//   notCommand: true, // idk
-// };
+const { formatMS } = require("../../utils");
+const { colors } = require("../../config.json");
 
-const { EmbedBuilder, ButtonBuilder, ActionRowBuilder, ButtonStyle } = require("discord.js");
+const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   id: "queue",
-  description: "View the queue.",
+  description: "Perform queue related operations",
+  category: "Music",
   aliases: ["q"],
   slash: "both",
-  expectedArgs: [],
-  category: "Music",
-  execute: async (interaction, { member, guildId, embedReply }) => {
+  permissions: ["Speak", "Connect"],
+  expectedArgs: [
+    {
+      type: "Subcommand",
+      name: "list",
+      description: "View the queue",
+      expectedArgs: [],
+    },
+    {
+      type: "Subcommand",
+      name: "remove",
+      description: "Remove an item from queue using its queue list index",
+      expectedArgs: [
+        {
+          type: "Integer",
+          name: "queue_index",
+          description: "The index of the queue item",
+          required: true,
+        },
+      ],
+    },
+  ],
+  execute: async (cmd, { client, member, guildId, subcommand, embedReply, reply }) => {
     const vc = member.voice?.channel?.id;
     if (vc == null) return embedReply("Not connected to V.C.", "You must be connected to a voice channel to use this command.", "error");
 
@@ -20,35 +40,43 @@ module.exports = {
     if (player.voiceChannel !== vc)
       return embedReply("Not in corresponding V.C.", "You must be in the same voice channel as the bot to use this command.", "error");
 
-    if (!player) return context.reply("Nothing is playing right now. :frowning:");
-    const embed = new EmbedBuilder().setTitle("Current queue");
-    var description = `__**Currently playing**__\n\`${player.queue.current.title}\` | Requested by ${player.queue.current.requester.tag}\n\n`;
-    for (var i = 0; i < player.queue.length; i++) {
-      var first = description;
-      if (i === 0) {
-        description += `__**Queue**__\n1. \`${player.queue[i].title}\` | Requested by ${player.queue[i].requester.tag}\n`;
-      } else {
-        description += `${i + 1}. \`${player.queue[i].title}\` | Requested by ${player.queue[i].requester.tag}\n`;
-      }
-      if (description.length >= 4096) {
-        embed.setDescription(first);
-        break;
+    switch (subcommand) {
+      case "list": {
+        if (player?.queue?.length == 0) return embedReply("Queue is empty");
+
+        const embed = new EmbedBuilder().setTitle("— Queue —").setColor(colors.primary);
+        let queueList = `Currently playing: \n**${player.queue.current.title}** | ~${formatMS(player.queue.current.duration - player.position, true).padStart(
+          5,
+          "00:"
+        )} left | <@${player.queue.current.requester.id}>\n\n`;
+        for (var i = 0; i < player.queue.length; i++) {
+          if (i === 0) {
+            queueList += `**— Full list —**\n\n1. **${player.queue[i].title}** | ${formatMS(player.queue[i].duration, true).padStart(5, "00:")} | <@${
+              player.queue[i].requester.id
+            }>\n`;
+          } else {
+            const nextItem = `${i + 1}. **${player.queue[i].title}** | ${formatMS(player.queue[i].duration, true).padStart(5, "00:")} | <@${
+              player.queue[i].requester.id
+            }>\n`;
+            if (nextItem.length + queueList.length > 4096) {
+              if (queueList.length + 5 <= 4096 && queueList.length + 5 >= 4096 - queueList.length) queueList += "\n...\n";
+              break;
+            } else {
+              queueList += nextItem;
+            }
+          }
+        }
+        embed.setDescription(queueList.slice(0, 4096));
+
+        embed.addFields([
+          {
+            name: "Total duration",
+            value: `${formatMS(player.queue.duration, true).padStart(5, "00:")}`,
+          },
+        ]);
+
+        await reply(null, false, { embeds: [embed] });
       }
     }
-    if (!embed.description) embed.setDescription(description);
-    embed.addFields([
-      {
-        name: "Note",
-        value: "If you have a ***really long*** queue, it might cut off due to how long it is. (don't worry, you'll be fine)",
-      },
-    ]);
-    const component = new ActionRowBuilder().addComponents([
-      new ButtonBuilder({
-        label: "Pause",
-        style: ButtonStyle.Primary,
-        customId: `pause_${context.guild.id}`,
-      }),
-    ]);
-    await interaction.reply({ embeds: [embed], components: [component] });
   },
 };
