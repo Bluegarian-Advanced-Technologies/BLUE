@@ -1,7 +1,7 @@
 module.exports = {
   id: "resume",
   description: "Resumes the playback",
-  category: "music",
+  category: "Music",
   aliases: ["r"],
   slash: "both",
   permissions: ["Speak", "Connect"],

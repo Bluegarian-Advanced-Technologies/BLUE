@@ -54,11 +54,21 @@ async function initialize(client, config = {}) {
   await client.BACH.restrictedRoles.init();
   console.log("Initialized restricted roles");
 
+  let helpData;
   for (let i = 0; i < commands.length; i++) {
     const command = commands[i];
+
+    if (command.endsWith("help.js")) {
+      helpData = command;
+      continue;
+    }
+
     const registration = await registerCommand.register(client, command);
     if (registration) slashCommandsPayload.push(registration.data.toJSON());
   }
+
+  const helpCmdRegisteration = await registerCommand.register(client, helpData);
+  slashCommandsPayload.push(helpCmdRegisteration.data.toJSON());
 
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
@@ -293,7 +303,6 @@ async function initialize(client, config = {}) {
       const validationResult = command.subcommanded
         ? validateSubcommand(command.expectedArgs.find((subcommandRaw) => subcommandRaw.name === subcommand))
         : command.expectedArgs.map((expectedArg, i) => {
-            console.log(args);
             if (args[i] == null && expectedArg[i + 1]?.required == null) return new Error(`${expectedArg.name} is required`);
             if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
             if (expectedArg.options) {
@@ -324,6 +333,7 @@ async function initialize(client, config = {}) {
         member: message.member,
         channel: message.channel,
         channelId: message.channelId,
+        subcommand,
         isInteraction: false,
         send: sendMessage,
         reply: messageReply,
@@ -488,6 +498,8 @@ async function initialize(client, config = {}) {
       embedReply: embedInteractionReply,
       args,
     };
+
+    if (command.id === "help") props.config = botConfig;
 
     try {
       await command.execute(interaction, props);

@@ -77,6 +77,14 @@ module.exports = {
         if (client.expectedAudioEvents.get(player.guild) === "queueend") return client.expectedAudioEvents.delete(player.guild);
         client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Queue has ended")] });
       })
+      .on("trackStuck", (player) => {
+        client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Current track stuck", "This track has been detected as stuck", "warn")] });
+      })
+      .on("trackError", (player, track, error) => {
+        client.channels.cache
+          .get(player.textChannel)
+          .send({ embeds: [embedMessage("Error occured with current track: " + error.exception, `${error.error}`, "error")] });
+      })
       .on("playerDestroy", (player) => {
         if (client.expectedAudioEvents.get(player.guild) === "disconnect") return client.expectedAudioEvents.delete(player.guild);
         client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Disconnected from voice channel")] });

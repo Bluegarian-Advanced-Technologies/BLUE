@@ -17,6 +17,22 @@ async function registerCommand(client, cmd) {
 
   const { id, description, aliases, slash, expectedArgs } = command;
 
+  if (id === "help") {
+    const knownCategories = [];
+    client.BACH.commands.forEach((cmd) => {
+      if (cmd?.alias) return;
+      if (knownCategories.includes(cmd.category)) return;
+      knownCategories.push(cmd.category);
+    });
+
+    knownCategories.forEach((category) => {
+      expectedArgs[0].options.push({
+        name: category,
+        value: category,
+      });
+    });
+  }
+
   if (slash === "both" || slash === true) {
     command.data = new SlashCommandBuilder().setName(id).setDescription(description);
 
