@@ -71,7 +71,7 @@ module.exports = {
     },
   ],
 
-  execute: async (cmd, { subcommand, guild, member, isInteraction, args, reply, embedReply }) => {
+  execute: async (cmd, { subcommand, guild, guildId, member, isInteraction, args, reply, embedReply }) => {
     switch (subcommand) {
       case "server": {
         const embedData = {
@@ -81,14 +81,29 @@ module.exports = {
             {
               name: "Members",
               value: guild.memberCount.toString(),
+              inline: true,
+            },
+            {
+              name: "Bots",
+              value: `${await guild.members.fetch().reduce((total, member) => {
+                if (member.user.bot)
+                {
+                  return total + 1;
+                }else {
+                  return total;
+                }
+              }, 0)}`,
+              inline: true,
             },
             {
               name: "Created",
               value: `<t:${Math.round(guild.createdTimestamp / 1000)}:D>`,
+              inline: true,
             },
             {
               name: "Owner",
               value: `<@${guild.ownerId}>`,
+              inline: true,
             },
           ],
         };
@@ -99,6 +114,17 @@ module.exports = {
           embedData.fields.push({
             name: "AFK V.C.",
             value: `${guild.afkChannel}`,
+            inline: true,
+          },
+          {
+            name: "Channels",
+            value: `${guild?.channels?.cache?.size ?? "??"}`,
+            inline: true,
+          },
+          {
+            name: "Bans",
+            value: `${guild?.bans?.cache?.size ?? "Unknown"}`,
+            inline: true,
           });
         }
 
@@ -163,9 +189,25 @@ module.exports = {
       case "restricted": {
         switch (args[0]) {
           case "dc": {
+            const disabledCommands = client.BACH.disabledCommands.getAll().find((cmd) => cmd.guildId === guildId);
+
+            if (disabledCommands == null) return embedReply("No disabled commands", null, "warn");
+
+            const disabledCommandsList = disabledCommands.commands.join(", ");
+
+            embedReply("Disabled Commands", disabledCommandsList);
+
             break;
           }
           case "de": {
+            const disabledEvents = client.BACH.disabledEvents.getAll().find((event) => event.guildId === guildId);
+
+            if (disabledEvents == null) return embedReply("No disabled events", null, "warn");
+
+            const disabledEventsList = disabledEvents.events.join(", ");
+
+            embedReply("Disabled Events", disabledEventsList);
+
             break;
           }
           case "rc": {
