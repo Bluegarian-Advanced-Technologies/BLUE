@@ -26,6 +26,12 @@ module.exports = {
       description: "Attain information on a user in this server",
       expectedArgs: [
         {
+          type: "User",
+          name: "user",
+          description: "The desired user",
+          required: true,
+        },
+        {
           type: "Boolean",
           name: "advanced",
           description: "Whether or not to list advanced info",
@@ -65,7 +71,7 @@ module.exports = {
     },
   ],
 
-  execute: async (cmd, { subcommand, guild, member, args, reply }) => {
+  execute: async (cmd, { subcommand, guild, member, isInteraction, args, reply, embedReply }) => {
     switch (subcommand) {
       case "server": {
         const embedData = {
@@ -105,21 +111,51 @@ module.exports = {
         break;
       }
       case "user": {
-        const user = await member.user.fetch();
+        let dynamicUser;
+        if (isInteraction) {
+          dynamicUser = args[0].id;
+        } else {
+          dynamicUser = args[0][1];
+        }
+        const userID = dynamicUser;
+
+        let targetMember;
+        try {
+          targetMember = await guild.members.fetch(userID);
+        } catch {
+          return embedReply("User not found", "The user given is not in this server", "error");
+        }
+
+        const user = await targetMember.user.fetch();
 
         const embedData = {
           color: user.hexAccentColor,
-          author: { name: `${user.username + user.discriminator}${" | " + member.nickname === " | " ?? ""}`, iconURL: user.displayAvatarURL, url: null },
+          author: {
+            name: `${user.username + "#" + user.discriminator}${targetMember.nickname ? " | " + targetMember.nickname : ""}`,
+            iconURL: user.displayAvatarURL(),
+            url: null,
+          },
           fields: [
             {
-              name: "Created",
+              name: "Account Created",
               value: `<t:${Math.round(user.createdTimestamp / 1000)}:D>`,
+              inline: true,
+            },
+            {
+              name: "Bot",
+              value: `${user.bot ? "Yes" : "No"}`,
+              inline: true,
+            },
+            {
+              name: "P.F.P.",
+              value: `[->URL<-](${user.avatarURL() + "?size=4096"})`,
+              inline: true,
             },
           ],
         };
 
         reply(null, false, {
-          embeds: [],
+          embeds: [createEmbed(embedData)],
         });
 
         break;
