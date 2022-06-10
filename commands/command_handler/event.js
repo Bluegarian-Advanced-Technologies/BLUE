@@ -39,15 +39,16 @@ module.exports = {
 
     let event = client.BACH.events.get(targetEvent);
 
-    if (event == null) return embedReply("Event non-existent", null, "warn");
+    if (event == null) return await embedReply("Event non-existent", null, "warn");
 
-    if (event.disableExempted) return embedReply("Cannot disable event", "This event is exempted from being disabled.", "error");
+    if (event.disableExempted) return await embedReply("Cannot disable event", "This event is exempted from being disabled.", "error");
 
     const cachedServer = client.BACH.disabledEvents.getAll().find((doc) => doc.guildId === guildId);
 
     switch (args[0]) {
       case "on":
-        if (!cachedServer || !cachedServer.events.includes(targetEvent)) return embedReply("Event not disabled", "Cannot enable already enabled event", "warn");
+        if (!cachedServer || !cachedServer.events.includes(targetEvent))
+          return await embedReply("Event not disabled", "Cannot enable already enabled event", "warn");
 
         client.BACH.disabledEvents.update({ guildId }, { $pull: { events: targetEvent } }, (servers) => {
           const targetServer = servers.find((server) => server.guildId === guildId);
@@ -70,9 +71,9 @@ module.exports = {
             events: [targetEvent],
           });
 
-          embedReply(`Event '${targetEvent}' disabled`, "Successfully disabled event", "ok");
+          await embedReply(`Event '${targetEvent}' disabled`, "Successfully disabled event", "ok");
         } else {
-          if (cachedServer.events.includes(targetEvent)) return embedReply("Event already disabled", "Cannot disable already disabled event", "warn");
+          if (cachedServer.events.includes(targetEvent)) return await embedReply("Event already disabled", "Cannot disable already disabled event", "warn");
           client.BACH.disabledEvents.update({ guildId }, { $push: { events: targetEvent } }, (servers) => {
             servers.find((server) => server.guildId === guildId).events.push(targetEvent);
           });

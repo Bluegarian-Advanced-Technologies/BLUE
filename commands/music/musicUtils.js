@@ -15,7 +15,7 @@ function createMusicEmbed({ thumbnail, title, status, url, duration, artist, req
     author: { name: status, url: null },
     title: title,
     url,
-    thumbnail: thumbnail.replace("default", "hqdefault"),
+    thumbnail: thumbnail?.replace("default", "hqdefault"),
     fields: [
       {
         name: "Length",

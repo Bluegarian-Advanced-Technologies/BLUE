@@ -11,7 +11,7 @@ module.exports = {
   id: "play",
   description: "Plays music in V.C.",
   category: "Music",
-  aliases: ["p"],
+  aliases: ["p", "pl"],
   slash: true,
   permissions: ["Speak", "Connect"],
   expectedArgs: [
@@ -92,16 +92,20 @@ module.exports = {
     client.playStore = new Map();
     client.expectedAudioEvents = new Map();
   },
-  async execute(cmd, { client, guildId, channelId, user, member, isInteraction, embedReply, reply, args }) {
+  async execute(cmd, { client, guildId, channelId, user, member, isInteraction, embedReply, send, reply, args }) {
     let song = args[0];
     const vc = member.voice?.channel?.id;
 
-    if (vc == null) return embedReply("Not connected to V.C.", "You must be connected to a voice channel to use this command.", "error");
+    if (vc == null) return await embedReply("Not connected to V.C.", "You must be connected to a voice channel to use this command.", "error");
+
+    const acknowledge = await embedReply("Preparing to play...", null, undefined, false, {
+      fetchReply: true,
+    });
 
     const results = await client.audioManager.search(song, user);
 
     if (results.loadType === "NO_MATCHES" || results.loadType === "LOAD_FAILED") {
-      return embedReply("No song found", null, "warn");
+      return await embedReply("No song found", null, "warn");
     }
 
     const player = client.audioManager.create({
@@ -112,38 +116,54 @@ module.exports = {
 
     if (!validateYTURL(args[0]) && args[1] === "yee_yee_yee") {
       if (client.playStore.get(`${user.id}_${guildId}`)) {
-        return embedReply("A select menu is already active", null, "warn");
+        return await embedReply("A select menu is already active", null, "warn");
       }
       const menu = new SelectMenuBuilder()
         .addOptions(
-          results.tracks.map((track, i) => ({
-            label: track.title,
-            value: i.toString(),
-          }))
+          results.tracks
+            .map((track, i) => ({
+              label: track.title,
+              value: i.toString(),
+            }))
+            .slice(0, 25)
         )
         .setCustomId(`play_${user.id}_${guildId}`);
       client.playStore.set(`${user.id}_${guildId}`, results.tracks);
-      reply(null, false, { components: [new ActionRowBuilder({ components: [menu] })] });
+      send(`${member}`, false, { components: [new ActionRowBuilder({ components: [menu] })] });
     } else {
       player.connect();
 
-      player.queue.add(results.tracks[0]);
+      if (results.loadType === "PLAYLIST_LOADED") {
+        send(null, false, {
+          embeds: [embedMessage("++🎶 Songs added to queue", results.playlist?.name)],
+        });
+        for (let i = 0; i < results.tracks.length; i++) {
+          const track = results.tracks[i];
+          player.queue.add(track);
+        }
+        if (!player.playing && !player.paused && player.queue.length === results.tracks.length - 1) player.play();
+      } else {
+        player.queue.add(results.tracks[0]);
 
-      reply(null, false, {
-        embeds: [
-          createMusicEmbed({
-            status: "++🎶 Song added to queue",
-            thumbnail: results.tracks[0].thumbnail,
-            title: results.tracks[0].title,
-            url: results.tracks[0].uri,
-            artist: results.tracks[0].author,
-            duration: formatMS(results.tracks[0].duration, true).padStart(5, "00:"),
-            requester: results.tracks[0].requester?.id,
-          }),
-        ],
-      });
-
-      if (!player.playing && !player.paused && !player.queue.size) player.play();
+        if (player.queue.length > 0) {
+          send(null, false, {
+            embeds: [
+              createMusicEmbed({
+                status: "++🎶 Song added to queue",
+                thumbnail: results.tracks[0].thumbnail,
+                title: results.tracks[0].title,
+                url: results.tracks[0].uri,
+                artist: results.tracks[0].author,
+                duration: formatMS(results.tracks[0].duration, true).padStart(5, "00:"),
+                requester: results.tracks[0].requester?.id,
+              }),
+            ],
+          });
+        }
+        if (!player.playing && !player.paused && !player.queue.size) player.play();
+      }
     }
+
+    await acknowledge.delete();
   },
 };

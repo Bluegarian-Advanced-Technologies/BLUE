@@ -107,7 +107,7 @@ async function initialize(client, config = {}) {
       const command = findTextCommand(args[0].toLowerCase());
       if (!command) return;
 
-      function sendMessage(content = "", ping = false, options = {}) {
+      async function sendMessage(content = "", ping = false, options = {}) {
         content == null ? null : content.substring(0, 2000);
 
         const reply = {
@@ -118,10 +118,10 @@ async function initialize(client, config = {}) {
           ...options,
         };
 
-        return message.channel.send(reply);
+        return await message.channel.send(reply);
       }
 
-      function messageReply(content = "", ping = false, options = {}) {
+      async function messageReply(content = "", ping = false, options = {}) {
         content == null ? null : content.substring(0, 2000);
 
         const reply = {
@@ -132,10 +132,10 @@ async function initialize(client, config = {}) {
           ...options,
         };
 
-        return message.reply(reply);
+        return await message.reply(reply);
       }
 
-      function embedMessageReply(title, text, status, ping = false, options = {}) {
+      async function embedMessageReply(title, text, status, ping = false, options = {}) {
         const reply = {
           embeds: [embedMessage(title, text, status)],
           allowedMentions: {
@@ -144,22 +144,22 @@ async function initialize(client, config = {}) {
           ...options,
         };
 
-        return message.reply(reply);
+        return await message.reply(reply);
       }
 
       if (command.elevation > (user?.elevation + 1 || 2) - 1)
-        return embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
+        return await embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
       const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
       if (guildDisabledCommands != null && guildDisabledCommands.commands.includes(command.id) && message.author.id !== client.application.owner.id)
-        return embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
+        return await embedMessageReply("Command Disabled", "This command is disabled in the server", "error");
 
       if (
         command.permissions != null &&
         !command.permissions.every((flag) => message.member.permissions.has(PermissionsBitField.Flags[flag])) &&
         message.author.id !== client.application.owner.id
       )
-        return embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
+        return await embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
 
       const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === message.guildId);
       const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
@@ -170,7 +170,7 @@ async function initialize(client, config = {}) {
         !restrictedRolesCommand.roles.every((role) => message.member.roles.cache.has(role)) &&
         message.author.id !== client.application.owner.id
       )
-        return embedMessageReply(
+        return await embedMessageReply(
           "Insufficient roles",
           `You require the following roles to use this command: ${restrictedRolesCommand.roles.reduce((total, value) => {
             return total + "\n<@&" + value + ">";
@@ -187,7 +187,7 @@ async function initialize(client, config = {}) {
         !restrictedChannelCommands?.channels.includes(message.channelId) &&
         message.author.id !== client.application.owner.id
       )
-        return embedMessageReply(
+        return await embedMessageReply(
           "Command restricted",
           `This command can only be run in the following channels: ${restrictedChannelCommands.channels.reduce((total, value) => {
             return total + "\n<#" + value + ">";
@@ -282,8 +282,9 @@ async function initialize(client, config = {}) {
           return [new Error(`Unknown sub command, expected ${command.expectedArgs.reduce((total, value) => total + value.name + " | ", "")}`)];
         args.shift();
         const result = subcommandRaw.expectedArgs.map((expectedArg, i) => {
-          if (args[i] == null && expectedArg[i + 1]?.required == null) return new Error(`${expectedArg.name} is required`);
+          if (args[i] == null && expectedArg[i + 1] != null && expectedArg[i + 1]?.required == null) return new Error(`${expectedArg.name} is required`);
           if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
+          if (args[i] == null && expectedArg[i] == null && expectedArg[i]?.required == null && expectedArg[i + 1] == null) return;
           if (expectedArg.options) {
             const optionsList = [];
 
@@ -303,8 +304,9 @@ async function initialize(client, config = {}) {
       const validationResult = command.subcommanded
         ? validateSubcommand(command.expectedArgs.find((subcommandRaw) => subcommandRaw.name === subcommand))
         : command.expectedArgs.map((expectedArg, i) => {
-            if (args[i] == null && expectedArg[i + 1]?.required == null) return new Error(`${expectedArg.name} is required`);
+            if (args[i] == null && expectedArg[i + 1] != null && expectedArg[i + 1]?.required == null) return new Error(`${expectedArg.name} is required`);
             if (args[i] == null && expectedArg.required === true) return new Error(`${expectedArg.name} is required`);
+            if (args[i] == null && expectedArg[i] == null && expectedArg[i]?.required == null && expectedArg[i + 1] == null) return;
             if (expectedArg.options) {
               const optionsList = [];
 
@@ -320,7 +322,7 @@ async function initialize(client, config = {}) {
 
       for (const a of validationResult) {
         if (a instanceof Error) {
-          return embedMessageReply("Invalid usage!", a.message, "error", false);
+          return await embedMessageReply("Invalid usage!", a.message, "error", false);
         }
       }
 
@@ -374,7 +376,7 @@ async function initialize(client, config = {}) {
 
     const user = client.BACH.users.getAll().find((userObj) => userObj.userId === interaction.user.id);
 
-    function sendMessage(content = "", ping = false, options = {}) {
+    async function sendMessage(content = "", ping = false, options = {}) {
       content == null ? null : content.substring(0, 2000);
 
       const reply = {
@@ -385,10 +387,10 @@ async function initialize(client, config = {}) {
         ...options,
       };
 
-      return interaction.channel.send(reply);
+      return await interaction.channel.send(reply);
     }
 
-    function interactionReply(content = "", ephemeral = false, options = {}) {
+    async function interactionReply(content = "", ephemeral = false, options = {}) {
       content == null ? null : content.substring(0, 2000);
       const reply = {
         content,
@@ -396,32 +398,32 @@ async function initialize(client, config = {}) {
         ...options,
       };
 
-      return interaction.reply(reply);
+      return await interaction.reply(reply);
     }
 
-    function embedInteractionReply(title, text, status, ephemeral = false, options = {}) {
+    async function embedInteractionReply(title, text, status, ephemeral = false, options = {}) {
       const reply = {
         embeds: [embedMessage(title, text, status)],
         ephemeral,
         ...options,
       };
 
-      return interaction.reply(reply);
+      return await interaction.reply(reply);
     }
 
     if (command.elevation > (user?.elevation + 1 || 2) - 1)
-      return embedInteractionReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
+      return await embedInteractionReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
     const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((cmd) => cmd.guildId === interaction.guildId);
     if (guildDisabledCommands && guildDisabledCommands.commands.includes(command.id) && interaction.user.id !== client.application.owner.id)
-      return embedInteractionReply("Command Disabled", "This command is disabled in the server", "error");
+      return await embedInteractionReply("Command Disabled", "This command is disabled in the server", "error");
 
     if (
       command.permissions &&
       !command.permissions.every((flag) => interaction.member.permissions.has(PermissionsBitField.Flags[flag])) &&
       interaction.user.id !== client.application.owner.id
     )
-      return embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
+      return await embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
 
     const restrictedRoles = client.BACH.restrictedRoles.getAll().find((doc) => doc.guildId === interaction.guildId);
     const restrictedRolesCommand = restrictedRoles?.commands?.find((cmd) => cmd.command === command.id);
@@ -432,7 +434,7 @@ async function initialize(client, config = {}) {
       !restrictedRolesCommand.roles.every((role) => interaction.member.roles.cache.has(role)) &&
       interaction.user.id !== client.application.owner.id
     )
-      return embedInteractionReply(
+      return await embedInteractionReply(
         "Insufficient roles",
         `You require the following roles to use this command: ${restrictedRolesCommand.roles.reduce((total, value) => {
           return total + "\n<@&" + value + ">";
@@ -449,7 +451,7 @@ async function initialize(client, config = {}) {
       !restrictedChannelCommands?.channels.includes(interaction.channelId) &&
       interaction.user.id !== client.application.owner.id
     )
-      return embedInteractionReply(
+      return await embedInteractionReply(
         "Command restricted",
         `This command can only be run in the following channels: ${restrictedChannelCommands.channels.reduce((total, value) => {
           return total + "\n<#" + value + ">";
@@ -505,10 +507,16 @@ async function initialize(client, config = {}) {
       await command.execute(interaction, props);
     } catch (err) {
       console.error(chalk.default.red(`${err}`));
-      await interaction.reply({
-        content: `**FATAL EXCEPTION CAUGHT!**\n ||<@${client.application.owner.id}>||`,
-        embeds: [embedMessage(err.name, err.message, "error")],
-      });
+      if (interaction.replied) {
+        await interaction.channel.send({
+          content: `**FATAL EXCEPTION CAUGHT!**\n ||<@${client.application.owner.id}>||`,
+          embeds: [embedMessage(err.name, err.message, "error")],
+        });
+      } else
+        await interaction.reply({
+          content: `**FATAL EXCEPTION CAUGHT!**\n ||<@${client.application.owner.id}>||`,
+          embeds: [embedMessage(err.name, err.message, "error")],
+        });
     }
   });
 }

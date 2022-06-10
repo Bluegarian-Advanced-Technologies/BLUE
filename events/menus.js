@@ -29,6 +29,7 @@ module.exports = {
       }
 
       await interaction.update({
+        content: null,
         embeds: [
           createMusicEmbed({
             status: "++🎶 Song added to queue",

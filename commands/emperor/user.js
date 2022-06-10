@@ -77,12 +77,12 @@ module.exports = {
 
         if (targetUser === client.application.owner.id) {
           if (user.id === client.application.owner.id)
-            return embedReply(
+            return await embedReply(
               "Apologies my Emperor",
               "Your almighty highness will prevail for eternity: as such, I will not attempt to change your elevation.",
               "warn"
             );
-          return embedReply("Access Denied", "The Emperor's elevation cannot be changed.", "error");
+          return await embedReply("Access Denied", "The Emperor's elevation cannot be changed.", "error");
         }
 
         if (users.getAll().find((u) => u.userId === targetUser)) {
@@ -96,7 +96,7 @@ module.exports = {
           });
         }
 
-        embedReply("User updated", `Successfully updated user elevation to ${targetElevation}`, "ok");
+        await embedReply("User updated", `Successfully updated user elevation to ${targetElevation}`, "ok");
       }
       case "blacklist": {
       }

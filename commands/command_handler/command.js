@@ -133,26 +133,26 @@ module.exports = {
       case "toggle": {
         const targetCommand = args[1].toLowerCase();
 
-        if (!checkCommandExists(client, isInteraction, targetCommand)) return embedReply("Command non-existent", null, "warn");
+        if (!checkCommandExists(client, isInteraction, targetCommand)) return await embedReply("Command non-existent", null, "warn");
 
         let command;
 
         if (isInteraction) {
           command = client.BACH.commands.get(targetCommand.toLowerCase());
-          if (!command) return embedReply("Command non-existent", null, "warn");
+          if (!command) return await embedReply("Command non-existent", null, "warn");
         } else {
           command = findTextCommand(client, targetCommand);
-          if (!command) return embedReply("Command non-existent", null, "warn");
+          if (!command) return await embedReply("Command non-existent", null, "warn");
         }
 
-        if (command.disableExempted) return embedReply("Cannot disable command", "This command is exempted from being disabled.", "error");
+        if (command.disableExempted) return await embedReply("Cannot disable command", "This command is exempted from being disabled.", "error");
 
         const cachedServer = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === guildId);
 
         switch (args[0]) {
           case "on":
             if (!cachedServer || !cachedServer.commands.includes(targetCommand))
-              return embedReply("Command not disabled", "Cannot enable already enabled command", "warn");
+              return await embedReply("Command not disabled", "Cannot enable already enabled command", "warn");
 
             client.BACH.disabledCommands.update({ guildId }, { $pull: { commands: targetCommand } }, (servers) => {
               const targetServer = servers.find((server) => server.guildId === guildId);
@@ -174,15 +174,15 @@ module.exports = {
                 guildId,
                 commands: [targetCommand],
               });
-              embedReply(`Command '${targetCommand}' disabled`, "Successfully disabled command", "ok");
+              await embedReply(`Command '${targetCommand}' disabled`, "Successfully disabled command", "ok");
             } else {
               if (cachedServer.commands.includes(targetCommand))
-                return embedReply("Command already disabled", "Cannot disable already disabled command", "warn");
+                return await embedReply("Command already disabled", "Cannot disable already disabled command", "warn");
               client.BACH.disabledCommands.update({ guildId }, { $push: { commands: targetCommand } }, (servers) => {
                 servers.find((server) => server.guildId === guildId).commands.push(targetCommand);
               });
 
-              embedReply(`Command '${targetCommand}' disabled`, "Successfully disabled command", "ok");
+              await embedReply(`Command '${targetCommand}' disabled`, "Successfully disabled command", "ok");
             }
             break;
           default:
@@ -200,7 +200,11 @@ module.exports = {
         if (isInteraction) {
           dynamicChannel = args[1].id;
           if (!args[1].isTextBased())
-            return embedReply("Not a Text Channel", "Channel categories are not supported yet, please select a text channel based channel instead.", "warn");
+            return await embedReply(
+              "Not a Text Channel",
+              "Channel categories are not supported yet, please select a text channel based channel instead.",
+              "warn"
+            );
         } else {
           dynamicChannel = args[1][1];
         }
@@ -209,26 +213,26 @@ module.exports = {
 
         if (isInteraction) {
           command = client.BACH.commands.get(targetCommand.toLowerCase());
-          if (!command) return embedReply("Command non-existent", null, "warn");
+          if (!command) return await embedReply("Command non-existent", null, "warn");
         } else {
           command = findTextCommand(client, targetCommand);
-          if (!command) return embedReply("Command non-existent", null, "warn");
+          if (!command) return await embedReply("Command non-existent", null, "warn");
         }
 
         if (command.disableExempted)
-          return embedReply("Cannot restrict command", "This command is exempted from being restricted for saftey purposes.", "error");
+          return await embedReply("Cannot restrict command", "This command is exempted from being restricted for saftey purposes.", "error");
 
-        if (!checkCommandExists(client, isInteraction, targetCommand)) return embedReply("Command non-existent", null, "warn");
+        if (!checkCommandExists(client, isInteraction, targetCommand)) return await embedReply("Command non-existent", null, "warn");
 
         if (isInteraction && client.BACH.commands.get(targetCommand) == null) {
-          return embedReply("Command non-existent");
-        } else if (findTextCommand(client, targetCommand) == null) return embedReply("Command non-existent");
+          return await embedReply("Command non-existent");
+        } else if (findTextCommand(client, targetCommand) == null) return await embedReply("Command non-existent");
 
         const cachedServer = client.BACH.restrictedChannels.getAll().find((server) => server.guildId === guildId);
 
         switch (args[0]) {
           case "unres": {
-            if (cachedServer == null) return embedReply("No restricted command channels", null, "warn");
+            if (cachedServer == null) return await embedReply("No restricted command channels", null, "warn");
 
             client.BACH.restrictedChannels.update(
               null,
@@ -270,7 +274,7 @@ module.exports = {
                   },
                 ],
               });
-              embedReply("Successfully completed", `Restricted *${targetCommand}* to <#${targetChannel}>.`, "ok");
+              await embedReply("Successfully completed", `Restricted *${targetCommand}* to <#${targetChannel}>.`, "ok");
             } else {
               client.BACH.restrictedChannels.update(
                 null,
@@ -320,7 +324,7 @@ module.exports = {
         const targetRole = dynamicRole;
         const targetCommand = args[2].toLowerCase();
 
-        if (!checkCommandExists(client, isInteraction, targetCommand)) return embedReply("Command non-existent", null, "warn");
+        if (!checkCommandExists(client, isInteraction, targetCommand)) return await embedReply("Command non-existent", null, "warn");
 
         const cachedServer = client.BACH.restrictedRoles.getAll().find((server) => server.guildId === guildId);
 
@@ -370,7 +374,7 @@ module.exports = {
             break;
           }
           case "remove": {
-            if (cachedServer == null) return embedReply("No restricted command roles", null, "warn");
+            if (cachedServer == null) return await embedReply("No restricted command roles", null, "warn");
 
             client.BACH.restrictedRoles.update(
               null,

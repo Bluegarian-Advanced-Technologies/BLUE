@@ -71,7 +71,7 @@ module.exports = {
     },
   ],
 
-  execute: async (cmd, { subcommand, guild, guildId, member, isInteraction, args, reply, embedReply }) => {
+  execute: async (cmd, { client, subcommand, guild, guildId, member, isInteraction, args, reply, embedReply }) => {
     switch (subcommand) {
       case "server": {
         const embedData = {
@@ -85,11 +85,10 @@ module.exports = {
             },
             {
               name: "Bots",
-              value: `${await guild.members.fetch().reduce((total, member) => {
-                if (member.user.bot)
-                {
+              value: `${(await guild.members.fetch()).reduce((total, member) => {
+                if (member.user.bot) {
                   return total + 1;
-                }else {
+                } else {
                   return total;
                 }
               }, 0)}`,
@@ -111,21 +110,28 @@ module.exports = {
         if (guild.description != null) embedData.description = guild.description;
 
         if (args[0] === true) {
-          embedData.fields.push({
-            name: "AFK V.C.",
-            value: `${guild.afkChannel}`,
-            inline: true,
-          },
-          {
-            name: "Channels",
-            value: `${guild?.channels?.cache?.size ?? "??"}`,
-            inline: true,
-          },
-          {
-            name: "Bans",
-            value: `${guild?.bans?.cache?.size ?? "Unknown"}`,
-            inline: true,
-          });
+          embedData.fields.push(
+            {
+              name: "AFK V.C.",
+              value: `${guild.afkChannel ? guild.afkChannel : "None"}`,
+              inline: true,
+            },
+            {
+              name: "Channels",
+              value: `${
+                guild?.channels?.cache?.reduce((total, channel) => {
+                  if (channel.isTextBased() || channel.isVoiceBased()) ++total;
+                  return total;
+                }, 0) ?? "??"
+              }`,
+              inline: true,
+            },
+            {
+              name: "Bans",
+              value: `${guild?.bans?.cache?.size ?? "Unknown"}`,
+              inline: true,
+            }
+          );
         }
 
         const baseEmbed = createEmbed(embedData);
@@ -149,7 +155,7 @@ module.exports = {
         try {
           targetMember = await guild.members.fetch(userID);
         } catch {
-          return embedReply("User not found", "The user given is not in this server", "error");
+          return await embedReply("User not found", "The user given is not in this server", "error");
         }
 
         const user = await targetMember.user.fetch();
@@ -174,7 +180,7 @@ module.exports = {
             },
             {
               name: "P.F.P.",
-              value: `[->URL<-](${user.avatarURL() + "?size=4096"})`,
+              value: `[->URL<-](${user.avatarURL({ extension: "png", size: 4096 })})`,
               inline: true,
             },
           ],
@@ -191,22 +197,22 @@ module.exports = {
           case "dc": {
             const disabledCommands = client.BACH.disabledCommands.getAll().find((cmd) => cmd.guildId === guildId);
 
-            if (disabledCommands == null) return embedReply("No disabled commands", null, "warn");
+            if (disabledCommands == null || disabledCommands.commands.length === 0) return await embedReply("No disabled commands", null, "warn");
 
             const disabledCommandsList = disabledCommands.commands.join(", ");
 
-            embedReply("Disabled Commands", disabledCommandsList);
+            await embedReply("Disabled Commands", disabledCommandsList);
 
             break;
           }
           case "de": {
             const disabledEvents = client.BACH.disabledEvents.getAll().find((event) => event.guildId === guildId);
 
-            if (disabledEvents == null) return embedReply("No disabled events", null, "warn");
+            if (disabledEvents == null || disabledEvents.events.length === 0) return await embedReply("No disabled events", null, "warn");
 
             const disabledEventsList = disabledEvents.events.join(", ");
 
-            embedReply("Disabled Events", disabledEventsList);
+            await embedReply("Disabled Events", disabledEventsList);
 
             break;
           }

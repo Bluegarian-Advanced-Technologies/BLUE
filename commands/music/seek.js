@@ -1,3 +1,5 @@
+const { formatMS } = require("../../utils");
+
 module.exports = {
   id: "seek",
   description: "Seek to a time in the track",
@@ -26,17 +28,22 @@ module.exports = {
   ],
   async execute(command, { client, guildId, member, args, embedReply }) {
     const vc = member.voice?.channel?.id;
-    if (!vc) return embedReply("Not connected to V.C.", "You must be connected to a voice channel to use this command.", "error");
+    if (!vc) return await embedReply("Not connected to V.C.", "You must be connected to a voice channel to use this command.", "error");
 
     const player = client.audioManager.players.get(guildId);
 
-    if (!player) return embedReply("Not connected to V.C.", "The bot is not connected to the voice channel.", "error");
+    if (!player) return await embedReply("Not connected to V.C.", "The bot is not connected to the voice channel.", "error");
     if (player.voiceChannel !== vc)
-      return embedReply("Not in corresponding V.C.", "You must be connected to the same voice channel as the bot to use this command.", "error");
+      return await embedReply("Not in corresponding V.C.", "You must be connected to the same voice channel as the bot to use this command.", "error");
 
     const isRelative = args[1] === "ye" && args[1] != null;
 
-    embedReply(`Seeked to ${isRelative ? Math.round((player.position + args[0] * 1000) / 1000) : args[0]} seconds`, "Allow a few seconds for seek to complete");
+    await embedReply(
+      `Seeked to ${
+        isRelative ? formatMS(Math.round(player.position + args[0] * 1000), true).padStart(5, "00:") : formatMS(args[0] * 1000, true).padStart(5, "00:")
+      }`,
+      "Allow a few seconds for seek to complete"
+    );
 
     if (isRelative) {
       player.seek(player.position + args[0] * 1000);
