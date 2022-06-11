@@ -83,7 +83,7 @@ module.exports = {
               player.queue[i].duration,
               true
             ).padStart(5, "00:")} | <@${player.queue[i].requester.id}>\n`;
-            if (nextItem.length + queueList.length > 4096) {
+            if (nextItem.length + queueList.length > 4096 - 3) {
               if (queueList.length + 3 <= 4096 && queueList.length + 3 >= 4096 - queueList.length) queueList += "...";
               break;
             } else {

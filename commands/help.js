@@ -22,6 +22,86 @@ function createArgString(args) {
 
 const commandCategories = [];
 
+function populateCommandCategories(client) {
+  client.BACH.commands.forEach((command) => {
+    if (command.alias || command.hidden) return;
+
+    if (commandCategories.length === 0) {
+      // Push to new category as categories are empty
+      const commandsList = [];
+
+      if (command.subcommanded) {
+        command.expectedArgs.forEach((arg) => {
+          commandsList.push({
+            id: `${command.id} ${arg.name}`,
+            description: arg.description,
+            arguements: createArgString(arg.expectedArgs),
+          });
+        });
+      } else {
+        commandsList.push({
+          id: command.id,
+          description: command.description,
+          arguements: createArgString(command.expectedArgs),
+        });
+      }
+
+      commandCategories.push({
+        category: command.category,
+        commands: commandsList,
+      });
+    } else {
+      const commandsList = [];
+
+      for (let i = 0; i < commandCategories.length; i++) {
+        const category = commandCategories[i];
+
+        if (category.category === command.category) {
+          // Push to existing category
+          if (command.subcommanded) {
+            command.expectedArgs.forEach((arg) => {
+              category.commands.push({
+                id: `${command.id} ${arg.name}`,
+                description: arg.description,
+                arguements: createArgString(arg.expectedArgs),
+              });
+            });
+          } else {
+            category.commands.push({
+              id: command.id,
+              description: command.description,
+              arguements: createArgString(command.expectedArgs),
+            });
+          }
+          return;
+        }
+      }
+
+      // Push to new category since not yet made
+      if (command.subcommanded) {
+        command.expectedArgs.forEach((arg) => {
+          commandsList.push({
+            id: `${command.id} ${arg.name}`,
+            description: arg.description,
+            arguements: createArgString(arg.expectedArgs),
+          });
+        });
+      } else {
+        commandsList.push({
+          id: command.id,
+          description: command.description,
+          arguements: createArgString(command.expectedArgs),
+        });
+      }
+
+      commandCategories.push({
+        category: command.category,
+        commands: commandsList,
+      });
+    }
+  });
+}
+
 module.exports = {
   id: "help",
   description: "Display BLUE's help menu",
@@ -43,90 +123,32 @@ module.exports = {
     const helpEmbed = new EmbedBuilder()
       .setColor(colors.primary)
       .setAuthor({ name: "BLUE Help Center", iconURL: assets.icon, url: null })
-      .setDescription(`Command options wrapped in \`<>\` are **required**, whilst \`[]\` are **optional**. All commands have their (**/**) varients.\n`)
       .setTimestamp()
       .setFooter({ text: "Bluegarian Logistics Universal Emulator: BLUE", iconURL: config.assets.icon });
 
     const helpCategory = args[0];
 
-    if (commandCategories.length === 0) {
-      client.BACH.commands.forEach((command) => {
-        if (command.alias || command.hidden) return;
+    if (helpCategory == null) {
+      if (commandCategories.length === 0) populateCommandCategories(client);
 
-        if (commandCategories.length === 0) {
-          // Push to new category as categories are empty
-          const commandsList = [];
-
-          if (command.subcommanded) {
-            command.expectedArgs.forEach((arg) => {
-              commandsList.push({
-                id: `${command.id} ${arg.name}`,
-                description: arg.description,
-                arguements: createArgString(arg.expectedArgs),
-              });
-            });
-          } else {
-            commandsList.push({
-              id: command.id,
-              description: command.description,
-              arguements: createArgString(command.expectedArgs),
-            });
-          }
-
-          commandCategories.push({
-            category: command.category,
-            commands: commandsList,
-          });
-        } else {
-          const commandsList = [];
-
-          for (let i = 0; i < commandCategories.length; i++) {
-            const category = commandCategories[i];
-
-            if (category.category === command.category) {
-              // Push to existing category
-              if (command.subcommanded) {
-                command.expectedArgs.forEach((arg) => {
-                  category.commands.push({
-                    id: `${command.id} ${arg.name}`,
-                    description: arg.description,
-                    arguements: createArgString(arg.expectedArgs),
-                  });
-                });
-              } else {
-                category.commands.push({
-                  id: command.id,
-                  description: command.description,
-                  arguements: createArgString(command.expectedArgs),
-                });
-              }
-              return;
-            }
-          }
-
-          // Push to new category since not yet made
-          if (command.subcommanded) {
-            command.expectedArgs.forEach((arg) => {
-              commandsList.push({
-                id: `${command.id} ${arg.name}`,
-                description: arg.description,
-                arguements: createArgString(arg.expectedArgs),
-              });
-            });
-          } else {
-            commandsList.push({
-              id: command.id,
-              description: command.description,
-              arguements: createArgString(command.expectedArgs),
-            });
-          }
-
-          commandCategories.push({
-            category: command.category,
-            commands: commandsList,
-          });
-        }
+      helpEmbed.setDescription("All command categories are listed below. Get commands of one category with `help [category name]`.\n\u200B");
+      const fields = commandCategories.map((category) => {
+        return { name: category.category, value: `${category.commands.length} command${category.commands.length > 1 ? "s" : ""}`, inline: true };
       });
+
+      helpEmbed.addFields(fields);
+
+      return reply(null, false, {
+        embeds: [helpEmbed],
+      });
+    }
+
+    if (commandCategories.length === 0) {
+      helpEmbed.setDescription(
+        `Command options wrapped in \`<>\` are **required**, whilst \`[]\` are **optional**. All commands have their (**/**) varients.\n`
+      );
+
+      populateCommandCategories(client);
     }
 
     if (helpCategory != null) {

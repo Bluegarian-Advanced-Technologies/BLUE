@@ -9,6 +9,7 @@ const utils = require("./utils.js");
 const { embedMessage, checkBoolean } = utils;
 const registerCommand = require("./BACH/registerCommand");
 const LiveCollection = require("./classes/LiveCollection");
+const CommandCooldownHandler = require("./classes/CommandCooldownHandler");
 
 const disabledCommands = require("./models/disabledCommands");
 const disabledEvents = require("./models/disabledEvents");
@@ -28,6 +29,7 @@ async function initialize(client, config = {}) {
   client.BACH = {};
 
   client.BACH.commands = new Collection();
+  client.BACH.commandCooldowns = new CommandCooldownHandler();
 
   client.BACH.disabledCommands = new LiveCollection(disabledCommands);
   console.log("Initializing disabled commands...");
@@ -145,6 +147,18 @@ async function initialize(client, config = {}) {
         };
 
         return await message.reply(reply);
+      }
+
+      if (client.BACH.commandCooldowns.validate(message.author.id, message.guildId)) {
+        const reply = await embedMessageReply(
+          "Command on cooldown",
+          `You must wait ${client.BACH.commandCooldowns.get(message.author.id, message.guildId)}s before using that again`,
+          "warn"
+        );
+        setTimeout(() => {
+          reply.delete().catch(() => {});
+        }, 5000);
+        return;
       }
 
       if (command.elevation > (user?.elevation + 1 || 2) - 1)
@@ -345,6 +359,8 @@ async function initialize(client, config = {}) {
 
       try {
         await command.execute(message, props);
+
+        client.BACH.commandCooldowns.addCooldown(message.author.id, message.guildId, command.cooldown);
       } catch (err) {
         console.error(err);
         await message.reply({
@@ -409,6 +425,20 @@ async function initialize(client, config = {}) {
       };
 
       return await interaction.reply(reply);
+    }
+
+    if (client.BACH.commandCooldowns.validate(interaction.user.id, interaction.guildId)) {
+      const reply = await embedInteractionReply(
+        "Command on cooldown",
+        `You must wait ${client.BACH.commandCooldowns.get(interaction.user.id, interaction.guildId)}s before using that again`,
+        "warn",
+        false,
+        { fetchReply: true }
+      );
+      setTimeout(() => {
+        reply.delete().catch(() => {});
+      }, 5000);
+      return;
     }
 
     if (command.elevation > (user?.elevation + 1 || 2) - 1)
@@ -505,6 +535,8 @@ async function initialize(client, config = {}) {
 
     try {
       await command.execute(interaction, props);
+
+      client.BACH.commandCooldowns.addCooldown(interaction.user.id, interaction.guildId, command.cooldown);
     } catch (err) {
       console.error(chalk.default.red(`${err}`));
       if (interaction.replied) {

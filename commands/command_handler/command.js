@@ -249,7 +249,7 @@ module.exports = {
                       if (command.channels[i] === targetChannel) {
                         command.channels.splice(i, 1);
 
-                        server.markModified("channels");
+                        server.markModified("commands");
                         server.save();
 
                         embedReply("Successfully completed", `Unrestricted *${targetCommand}* from <#${targetChannel}>.`, "ok");
@@ -287,9 +287,9 @@ module.exports = {
                     if (command.command === targetCommand) {
                       if (command.channels.includes(targetChannel))
                         return embedReply("Command already restricted", "This command is already restricted to the channel.", "warn");
-                      command.channels.push(targetCommand);
+                      command.channels.push(targetChannel);
 
-                      server.markModified("channels");
+                      server.markModified("commands");
                       server.save();
 
                       embedReply("Successfully completed", `Restricted *${targetCommand}* to <#${targetChannel}>.`, "ok");

@@ -217,9 +217,47 @@ module.exports = {
             break;
           }
           case "rc": {
+            const restrictedChannels = client.BACH.restrictedChannels.getAll().find((cmd) => cmd.guildId === guildId);
+
+            if (restrictedChannels == null || restrictedChannels.commands.length === 0) return await embedReply("No restricted commands", null, "warn");
+
+            let restrictedList = "";
+
+            restrictedChannels.commands.forEach((command, i) => {
+              if (command.channels.length === 0) return;
+              restrictedList += `**${i > 0 ? "\n\n" : ""}${command.command}**\n${command.channels.reduce((total, channel, i) => {
+                return total + `${i + 1 === command.channels.length && command.channels.length > 1 ? ", " : ""}<#${channel}>`;
+              }, "")}`;
+            });
+
+            if (restrictedList.length === 0) {
+              embedReply("No restricted commands", null, "warn");
+            } else {
+              await embedReply("Restricted Command Channels", restrictedList);
+            }
+
             break;
           }
           case "rr": {
+            const restrictedRoles = client.BACH.restrictedRoles.getAll().find((cmd) => cmd.guildId === guildId);
+
+            if (restrictedRoles == null || restrictedRoles.commands.length === 0) return await embedReply("No restricted command roles", null, "warn");
+
+            let restrictedList = "";
+
+            restrictedRoles.commands.forEach((role, i) => {
+              if (role.roles.length === 0) return;
+              restrictedList += `**${i > 0 ? "\n\n" : ""}${role.command}**\n${role.roles.reduce((total, roleID, i) => {
+                return total + `${i + 1 === role.roles.length && role.roles.length > 1 ? ", " : ""}<#${roleID}>`;
+              }, "")}`;
+            });
+
+            if (restrictedList.length === 0) {
+              embedReply("No restricted command roles", null, "warn");
+            } else {
+              await embedReply("Restricted Command Roles", restrictedList);
+            }
+
             break;
           }
         }

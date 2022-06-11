@@ -15,6 +15,10 @@ async function registerCommand(client, cmd) {
     command.elevation = 1;
   }
 
+  if (command.cooldown == null) {
+    command.cooldown = 1;
+  }
+
   const { id, description, aliases, slash, expectedArgs } = command;
 
   if (id === "help") {
