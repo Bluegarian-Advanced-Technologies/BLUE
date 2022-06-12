@@ -14,11 +14,12 @@ const config = require("./config.json");
 const path = require("path");
 const { spawn } = require("child_process");
 
-const lavalinkProcess = config["lavalink-local"]
-  ? spawn("java", ["-Xmx400M", "-jar", "Lavalink.jar"], {
-      cwd: path.join(__dirname, "./Lavalink"),
-    })
-  : null;
+const lavalinkProcess =
+  process.env.LOCAL_LAVALINK === "yes"
+    ? spawn("java", ["-Xmx400M", "-jar", "Lavalink.jar"], {
+        cwd: path.join(__dirname, "./Lavalink"),
+      })
+    : null;
 
 const client = new Client({
   intents: [
