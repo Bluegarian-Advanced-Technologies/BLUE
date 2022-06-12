@@ -142,7 +142,7 @@ module.exports = {
     const results = await client.audioManager.search(song, user);
 
     if (results.loadType === "NO_MATCHES" || results.loadType === "LOAD_FAILED") {
-      return await embedReply("No song found", null, "warn");
+      return await send("No song found", `<@${user.id}>`, "warn");
     }
 
     const player = client.audioManager.create({
@@ -153,7 +153,7 @@ module.exports = {
 
     if (!validateYTURL(args[0]) && args[1] === "yee_yee_yee") {
       if (client.playStore.get(`${user.id}_${guildId}`)) {
-        return await embedReply("A select menu is already active", null, "warn");
+        return await send("A select menu is already active", null, "warn");
       }
       const menu = new SelectMenuBuilder()
         .addOptions(
