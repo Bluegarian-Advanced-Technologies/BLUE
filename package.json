@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Bluegarian Logistics Universal Emulator",
   "main": "index.js",
+  "engines": {
+    "node": "17.x"
+  },
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js"
