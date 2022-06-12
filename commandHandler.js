@@ -86,12 +86,12 @@ async function initialize(client, config = {}) {
     console.log("Started refreshing application (/) commands.");
 
     if (process.env.NODE_ENV === "production") {
-      await rest.put(Routes.applicationCommands("969385645963370496"), { body: slashCommandsPayload });
+      await rest.put(Routes.applicationCommands(process.env.BOT_ID), { body: slashCommandsPayload });
     } else {
-      await rest.put(Routes.applicationGuildCommands("969385645963370496", "738768458627416116"), { body: slashCommandsPayload }); // EE server
-      await rest.put(Routes.applicationGuildCommands("969385645963370496", "905595623208796161"), { body: slashCommandsPayload }); // Jesus server
-      await rest.put(Routes.applicationGuildCommands("969385645963370496", "834471563331371078"), { body: slashCommandsPayload }); // Donuts server
-      await rest.put(Routes.applicationGuildCommands("969385645963370496", "951662182846836968"), { body: slashCommandsPayload }); // Four Wheels server
+      await rest.put(Routes.applicationGuildCommands(process.env.BOT_ID, "738768458627416116"), { body: slashCommandsPayload }); // EE server
+      await rest.put(Routes.applicationGuildCommands(process.env.BOT_ID, "905595623208796161"), { body: slashCommandsPayload }); // Jesus server
+      await rest.put(Routes.applicationGuildCommands(process.env.BOT_ID, "834471563331371078"), { body: slashCommandsPayload }); // Donuts server
+      await rest.put(Routes.applicationGuildCommands(process.env.BOT_ID, "951662182846836968"), { body: slashCommandsPayload }); // Four Wheels server
     }
 
     console.log("Successfully reloaded application (/) commands.");
