@@ -1,5 +1,10 @@
-const { createEmbed } = require("../../utils");
+const { createEmbed, formatMS } = require("../../utils");
 const { colors } = require("../../config.json");
+
+const os = require("os");
+
+const cpus = os.cpus();
+const cpu = cpus[0];
 
 module.exports = {
   id: "info",
@@ -68,6 +73,12 @@ module.exports = {
           ],
         },
       ],
+    },
+    {
+      type: "Subcommand",
+      name: "bot",
+      description: "Attain bot information",
+      expectedArgs: [],
     },
   ],
 
@@ -263,6 +274,39 @@ module.exports = {
         }
 
         break;
+      }
+      case "bot": {
+        const memory = Math.round((process.memoryUsage().heapUsed / 1024 / 1024) * 100) / 100;
+
+        const botEmbed = {
+          color: colors.primary,
+          author: {
+            name: "BLUE System Information",
+            url: null,
+            iconURL: client.user.displayAvatarURL(),
+          },
+          fields: [
+            {
+              name: "Memory usage",
+              value: `${memory}MB`,
+              inline: true,
+            },
+            {
+              name: "Uptime",
+              value: `${formatMS(Math.round(process.uptime() * 1000), true)}`,
+              inline: true,
+            },
+            {
+              name: "Servers",
+              value: `${client.guilds.cache.size}`,
+              inline: true,
+            },
+          ],
+        };
+
+        reply(null, false, {
+          embeds: [createEmbed(botEmbed)],
+        });
       }
     }
   },

@@ -1,5 +1,5 @@
-const { createMusicEmbed } = require("../commands/music/musicUtils");
-const { formatMS } = require("../utils");
+const { createMusicEmbed } = require("../../commands/music/musicUtils");
+const { formatMS } = require("../../utils");
 
 module.exports = {
   id: "menus",

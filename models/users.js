@@ -12,6 +12,16 @@ const user = mongoose.Schema({
     max: 5,
     required: false,
   },
+
+  preferences: {
+    type: Object,
+    default: {},
+  },
+
+  saved: {
+    type: Object,
+    default: {},
+  },
 });
 
 module.exports = mongoose.model("user", user);

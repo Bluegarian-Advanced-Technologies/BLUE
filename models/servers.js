@@ -8,6 +8,12 @@ const server = mongoose.Schema({
 
   whitelisted: {
     type: Boolean,
+    default: false,
+  },
+
+  preferences: {
+    type: Object,
+    default: {},
   },
 });
 

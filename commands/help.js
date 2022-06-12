@@ -144,10 +144,6 @@ module.exports = {
     }
 
     if (commandCategories.length === 0) {
-      helpEmbed.setDescription(
-        `Command options wrapped in \`<>\` are **required**, whilst \`[]\` are **optional**. All commands have their (**/**) varients.\n`
-      );
-
       populateCommandCategories(client);
     }
 
@@ -155,7 +151,9 @@ module.exports = {
       const category = commandCategories.find((cat) => cat.category === helpCategory);
 
       helpEmbed.setTitle(`Commands of ${category.category}`);
-
+      helpEmbed.setDescription(
+        `Command options wrapped in \`<>\` are **required**, whilst \`[]\` are **optional**. All commands have their (**/**) varients.\n`
+      );
       const fields = [];
 
       for (let i = 0; i < category.commands.length; i++) {

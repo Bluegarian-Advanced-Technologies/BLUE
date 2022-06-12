@@ -8,7 +8,7 @@ class LiveCollection {
   }
 
   async init() {
-    const docs = await this.schema.find();
+    const docs = await this.schema.find().lean();
     this.values = docs;
     this.cached = true;
   }

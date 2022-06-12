@@ -38,9 +38,10 @@ module.exports = {
     client.audioManager = new Manager({
       nodes: [
         {
-          host: "24.141.115.80",
+          // host: "24.141.115.80",
+          host: "0.0.0.0",
           port: 2333,
-          password: process.env.LAVALINK_PASSWORD,
+          // password: process.env.LAVALINK_PASSWORD,
           secure: false,
         },
       ],
@@ -59,35 +60,72 @@ module.exports = {
       .on("nodeConnect", (node) => console.log(`Node ${node.options.identifier} connected`))
       .on("nodeError", (node, error) => console.log(`Node ${node.options.identifier} had an error: ${error.message}`))
       .on("trackStart", (player, track) => {
-        client.channels.cache.get(player.textChannel).send({
-          embeds: [
-            createMusicEmbed({
-              status: "🎵 Now playing:",
-              thumbnail: track.thumbnail,
-              title: track.title,
-              url: track.uri,
-              artist: track.author,
-              duration: formatMS(track.duration, true).padStart(5, "00:"),
-              requester: track.requester?.id,
-            }),
-          ],
-        });
+        try {
+          client.channels.cache.get(player.textChannel).send({
+            embeds: [
+              createMusicEmbed({
+                status: "🎵 Now playing:",
+                thumbnail: track.thumbnail,
+                title: track.title,
+                url: track.uri,
+                artist: track.author,
+                duration: formatMS(track.duration, true).padStart(5, "00:"),
+                requester: track.requester?.id,
+              }),
+            ],
+          });
+        } catch (err) {
+          console.error(err);
+        }
       })
       .on("queueEnd", (player) => {
-        if (client.expectedAudioEvents.get(player.guild) === "queueend") return client.expectedAudioEvents.delete(player.guild);
-        client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Queue has ended")] });
+        try {
+          if (client.expectedAudioEvents.get(player.guild) === "queueend") return client.expectedAudioEvents.delete(player.guild);
+          client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Queue has ended")] });
+        } catch (err) {
+          console.error(err);
+        }
       })
       .on("trackStuck", (player) => {
-        client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Current track stuck", "This track has been detected as stuck", "warn")] });
+        try {
+          client.channels.cache
+            .get(player.textChannel)
+            .send({ embeds: [embedMessage("Current track stuck", "This track has been detected as stuck", "warn")] });
+        } catch (err) {
+          console.error(err);
+        }
       })
       .on("trackError", (player, track, error) => {
-        client.channels.cache
-          .get(player.textChannel)
-          .send({ embeds: [embedMessage("Error occured with current track: " + error.exception, `${error.error}`, "error")] });
+        try {
+          client.channels.cache
+            .get(player.textChannel)
+            .send({ embeds: [embedMessage("Error occured with current track: " + error.exception, `${error.error}`, "error")] });
+        } catch (err) {
+          console.error(err);
+        }
+      })
+      .on("playerMove", (player, prevChannel, newChannel) => {
+        try {
+          const wasNotPlaying = player.paused;
+          player.setVoiceChannel(newChannel);
+
+          const checkReconnnected = setInterval(() => {
+            if (player.state === "CONNECTED") {
+              if (!wasNotPlaying) player.pause(false);
+              return clearInterval(checkReconnnected);
+            }
+          }, 100);
+        } catch (err) {
+          console.error(err);
+        }
       })
       .on("playerDestroy", (player) => {
-        if (client.expectedAudioEvents.get(player.guild) === "disconnect") return client.expectedAudioEvents.delete(player.guild);
-        client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Disconnected from voice channel")] });
+        try {
+          if (client.expectedAudioEvents.get(player.guild) === "disconnect") return client.expectedAudioEvents.delete(player.guild);
+          client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Disconnected from voice channel")] });
+        } catch (err) {
+          console.error(err);
+        }
       });
     client.playStore = new Map();
     client.expectedAudioEvents = new Map();

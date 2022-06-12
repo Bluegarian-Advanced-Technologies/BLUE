@@ -201,6 +201,7 @@ module.exports = {
       type: "String",
       name: "word",
       description: "The word to be defined",
+      trailing: true,
       required: true,
     },
     {

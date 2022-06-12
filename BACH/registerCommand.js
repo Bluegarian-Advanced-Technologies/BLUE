@@ -11,6 +11,7 @@ async function registerCommand(client, cmd) {
   const command = require(cmd);
 
   if (command.notCommand) return false;
+
   if (command.elevation == null) {
     command.elevation = 1;
   }
@@ -24,7 +25,7 @@ async function registerCommand(client, cmd) {
   if (id === "help") {
     const knownCategories = [];
     client.BACH.commands.forEach((cmd) => {
-      if (cmd?.alias) return;
+      if (cmd?.alias || cmd?.hidden) return;
       if (knownCategories.includes(cmd.category)) return;
       knownCategories.push(cmd.category);
     });

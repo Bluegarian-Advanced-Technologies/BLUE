@@ -5,13 +5,13 @@ module.exports = {
   aliases: [],
   slash: "both",
   hidden: true,
-  elevation: 5,
+  elevation: 4,
   disableExempted: true,
   expectedArgs: [
     {
       type: "Subcommand",
       name: "elevation",
-      description: "Configure user elevation",
+      description: "Configure user elevation (bot admin only)",
       expectedArgs: [
         {
           type: "User",
@@ -25,35 +25,6 @@ module.exports = {
           description: "Desired elevation 0-5",
           min: 0,
           max: 5,
-          required: true,
-        },
-      ],
-    },
-    {
-      type: "Subcommand",
-      name: "blacklist",
-      description: "Add or remove user to bot blacklist",
-      expectedArgs: [
-        {
-          type: "String",
-          name: "action",
-          description: "Desired action",
-          required: true,
-          options: [
-            {
-              name: "Add",
-              value: "add",
-            },
-            {
-              name: "Remove",
-              value: "remove",
-            },
-          ],
-        },
-        {
-          type: "User",
-          name: "_user",
-          description: "Target user",
           required: true,
         },
       ],
@@ -97,8 +68,6 @@ module.exports = {
         }
 
         await embedReply("User updated", `Successfully updated user elevation to ${targetElevation}`, "ok");
-      }
-      case "blacklist": {
       }
     }
   },

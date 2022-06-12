@@ -10,12 +10,14 @@ const { embedMessage, checkBoolean } = utils;
 const registerCommand = require("./BACH/registerCommand");
 const LiveCollection = require("./classes/LiveCollection");
 const CommandCooldownHandler = require("./classes/CommandCooldownHandler");
+const ServerManager = require("./classes/ServerManager");
 
 const disabledCommands = require("./models/disabledCommands");
 const disabledEvents = require("./models/disabledEvents");
 const restrictedChannels = require("./models/restrictedChannels");
 const restrictedRoles = require("./models/restrictedRoles");
 const users = require("./models/users");
+const servers = require("./models/servers");
 
 async function initialize(client, config = {}) {
   const chalk = await import("chalk");
@@ -45,6 +47,12 @@ async function initialize(client, config = {}) {
   console.log("Initializing users...");
   await client.BACH.users.init();
   console.log("Initialized users");
+
+  const _servers = new LiveCollection(servers);
+  console.log("Initializing servers...");
+  await _servers.init();
+  client.BACH.servers = new ServerManager(client, _servers);
+  console.log("Initialized servers");
 
   client.BACH.restrictedChannels = new LiveCollection(restrictedChannels);
   console.log("Initializing restricted channels...");
@@ -83,6 +91,7 @@ async function initialize(client, config = {}) {
       await rest.put(Routes.applicationGuildCommands("969385645963370496", "738768458627416116"), { body: slashCommandsPayload }); // EE server
       await rest.put(Routes.applicationGuildCommands("969385645963370496", "905595623208796161"), { body: slashCommandsPayload }); // Jesus server
       await rest.put(Routes.applicationGuildCommands("969385645963370496", "834471563331371078"), { body: slashCommandsPayload }); // Donuts server
+      await rest.put(Routes.applicationGuildCommands("969385645963370496", "951662182846836968"), { body: slashCommandsPayload }); // Four Wheels server
     }
 
     console.log("Successfully reloaded application (/) commands.");
@@ -161,7 +170,9 @@ async function initialize(client, config = {}) {
         return;
       }
 
-      if (command.elevation > (user?.elevation + 1 || 2) - 1)
+      if (user?.elevation === 0) return await embedMessageReply("You are banned", `You have been blacklisted from using BLUE.`, "error");
+
+      if (command.elevation > (user?.elevation || 1))
         return await embedMessageReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");
 
       const guildDisabledCommands = client.BACH.disabledCommands.getAll().find((doc) => doc.guildId === message.guildId);
@@ -215,11 +226,10 @@ async function initialize(client, config = {}) {
         switch (expectedArg.type.toLowerCase()) {
           case "string": {
             if (expectedArg.trailing) {
-              if (!args.join(" ").includes('"')) return;
+              if (!args.join(" ").includes('"'))
+                return new Error(`Argument ${i + 1} (${expectedArg.name}) could have spaces. Wrap the target argument in quotations ("...").`);
               const newargs = args.join(" ").match(/"([^"\\]*(?:\\.[^"\\]*)*)"|\S+/g);
-              console.log(newargs);
               args.splice(i, newargs.length - 1);
-              console.log(args);
               return (args[i] = newargs[i].replace(/"/g, ""));
             }
             return (args[i] = args[i].trim());
@@ -440,6 +450,8 @@ async function initialize(client, config = {}) {
       }, 5000);
       return;
     }
+
+    if (user?.elevation === 0) return await embedInteractionReply("You are banned", `You have been blacklisted from using BLUE.`, "error");
 
     if (command.elevation > (user?.elevation + 1 || 2) - 1)
       return await embedInteractionReply("Access Denied", `Level ${command.elevation} clearance required.`, "error");

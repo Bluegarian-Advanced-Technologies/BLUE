@@ -18,6 +18,6 @@ module.exports = {
     if (player.playing) return await embedReply(`Already playing`, null, "warn");
 
     player.pause(false);
-    return await embedReply(`Resumed the playback`);
+    return await embedReply(`▶ Resumed the playback`);
   },
 };
