@@ -67,7 +67,7 @@ db.on("disconnected", () => {
 
 (async () => {
   // Init local lavalink server
-  if (config["lavalink-local"]) {
+  if (process.env.LOCAL_LAVALINK === "yes") {
     console.log("Starting local Lavalink process...");
     console.time("Lavalink startup time");
     await new Promise((resolve) => {
