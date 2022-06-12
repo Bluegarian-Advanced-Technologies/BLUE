@@ -38,10 +38,10 @@ module.exports = {
     client.audioManager = new Manager({
       nodes: [
         {
-          // host: "24.141.115.80",
-          host: "0.0.0.0",
+          host: "24.141.115.80",
+          // host: "0.0.0.0",
           port: 2333,
-          // password: process.env.LAVALINK_PASSWORD,
+          password: process.env.LAVALINK_PASSWORD,
           secure: false,
         },
       ],
