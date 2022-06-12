@@ -109,7 +109,7 @@ async function initialize(client, config = {}) {
     try {
       if (message.author.bot) return;
       if (message.content.startsWith(`<@${client.user.id}>`) || message.content.startsWith(`<@!${client.user.id}>`))
-        return client.BACH.commands.get("help").execute(message, { client, config: botConfig, reply: messageReply });
+        return client.BACH.commands.get("help").execute(message, { client, config: botConfig, args: [], reply: messageReply });
       if (!message.content.startsWith(prefix)) return;
 
       const user = client.BACH.users.getAll().find((userObj) => userObj.userId === message.author.id);
