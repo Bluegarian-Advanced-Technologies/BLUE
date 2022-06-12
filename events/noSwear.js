@@ -1,4 +1,4 @@
-const LiveCollection = require("../classes/liveCollection.js");
+const LiveCollection = require("../classes/LiveCollection.js");
 const swearWord = require("../models/swearWord.js");
 
 const swearWords = new LiveCollection(swearWord);
