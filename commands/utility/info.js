@@ -292,6 +292,11 @@ module.exports = {
               inline: true,
             },
             {
+              name: "CPU",
+              value: `${cpu.model}@${Math.round(cpu.speed / 1000) / 10}Ghz`,
+              inline: true,
+            },
+            {
               name: "Uptime",
               value: `${formatMS(Math.round(process.uptime() * 1000), true)}`,
               inline: true,

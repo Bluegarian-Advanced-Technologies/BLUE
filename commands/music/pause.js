@@ -16,6 +16,6 @@ module.exports = {
       return await embedReply("Not in corresponding V.C.", "You must be connected to the same voice channel as the bot to use this command.", "error");
 
     player.pause(player.playing);
-    return await embedReply(`${player.playing ? "▶ Resumed" : "⏸ Paused"} the music`);
+    return await embedReply(`${player.playing ? "▶ Resumed" : "⏸ Paused"} the playback`);
   },
 };

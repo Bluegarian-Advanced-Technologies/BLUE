@@ -16,7 +16,7 @@ const { spawn } = require("child_process");
 
 const lavalinkProcess =
   process.env.LOCAL_LAVALINK === "yes"
-    ? spawn("java", ["-Xmx400M", "-jar", "Lavalink.jar"], {
+    ? spawn("java", ["-Xmx350M", "-jar", "Lavalink.jar"], {
         cwd: path.join(__dirname, "./Lavalink"),
       })
     : null;
