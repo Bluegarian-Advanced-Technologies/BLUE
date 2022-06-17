@@ -38,7 +38,7 @@ module.exports = {
       }
     } else {
       bluegariaDetected = true;
-      if (server.whitelisted === false) {
+      if (server != null && server?.whitelisted === false) {
         await leaveServer();
       }
     }
