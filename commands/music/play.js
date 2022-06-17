@@ -105,6 +105,8 @@ module.exports = {
       })
       .on("playerMove", (player, prevChannel, newChannel) => {
         try {
+          if (newChannel == null || newChannel.length === 0) return;
+
           const wasNotPlaying = player.paused;
           player.setVoiceChannel(newChannel);
 

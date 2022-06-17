@@ -16,11 +16,13 @@ const user = mongoose.Schema({
   preferences: {
     type: Object,
     default: {},
+    required: false,
   },
 
   saved: {
     type: Object,
     default: {},
+    required: false,
   },
 });
 

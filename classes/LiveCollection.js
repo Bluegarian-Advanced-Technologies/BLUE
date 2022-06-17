@@ -50,6 +50,10 @@ class LiveCollection {
     }
   }
 
+  updateCache(cb) {
+    cb(this.values);
+  }
+
   async delete(filter, cb) {
     const query = this.schema
       .findOneAndDelete(filter)

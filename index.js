@@ -14,13 +14,6 @@ const config = require("./config.json");
 const path = require("path");
 const { spawn } = require("child_process");
 
-const lavalinkProcess =
-  process.env.LOCAL_LAVALINK === "yes"
-    ? spawn("java", ["-Xmx350M", "-jar", "Lavalink.jar"], {
-        cwd: path.join(__dirname, "./Lavalink"),
-      })
-    : null;
-
 const client = new Client({
   intents: [
     IntentsBitField.Flags.Guilds,
@@ -70,6 +63,11 @@ db.on("disconnected", () => {
   if (process.env.LOCAL_LAVALINK === "yes") {
     console.log("Starting local Lavalink process...");
     console.time("Lavalink startup time");
+
+    const lavalinkProcess = spawn("java", ["-Xmx350M", "-jar", "Lavalink.jar"], {
+      cwd: path.join(__dirname, "./Lavalink"),
+    });
+
     await new Promise((resolve) => {
       lavalinkProcess.stdout.on("data", (data) => {
         if (data.toString("utf-8").includes("Started Launcher")) return resolve();

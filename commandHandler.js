@@ -91,7 +91,6 @@ async function initialize(client, config = {}) {
       await rest.put(Routes.applicationGuildCommands(process.env.BOT_ID, "738768458627416116"), { body: slashCommandsPayload }); // EE server
       await rest.put(Routes.applicationGuildCommands(process.env.BOT_ID, "905595623208796161"), { body: slashCommandsPayload }); // Jesus server
       await rest.put(Routes.applicationGuildCommands(process.env.BOT_ID, "834471563331371078"), { body: slashCommandsPayload }); // Donuts server
-      await rest.put(Routes.applicationGuildCommands(process.env.BOT_ID, "951662182846836968"), { body: slashCommandsPayload }); // Four Wheels server
     }
 
     console.log("Successfully reloaded application (/) commands.");
