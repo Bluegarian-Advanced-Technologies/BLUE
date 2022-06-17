@@ -293,7 +293,7 @@ module.exports = {
             },
             {
               name: "CPU",
-              value: `${cpu.model}@${Math.round(cpu.speed / 1000) / 10}Ghz`,
+              value: `${cpu.model}`,
               inline: true,
             },
             {

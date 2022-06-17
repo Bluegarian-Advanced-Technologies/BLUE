@@ -14,6 +14,7 @@ const server = mongoose.Schema({
   preferences: {
     type: Object,
     default: {},
+    required: false,
   },
 });
 

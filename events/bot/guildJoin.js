@@ -1,6 +1,6 @@
 const { PermissionsBitField } = require("discord.js");
 
-const BLUEGARIA_ABSENT_LEAVE_MSG = `— __**BOT USAGE DENIED**__ —\n\nThe Emperor of Bluegaria's presence is absent in this server, along with the fact that this server is not whitelisted.\n\n*Leaving server...*`;
+const BLUEGARIA_ABSENT_LEAVE_MSG = `— __**BOT USAGE DENIED**__ —\n\nThe Emperor of Bluegaria's almighty presence is absent in this unwhitelisted server.\n\n*Leaving server...*`;
 const BLUEGARIA_HERE_UNWHITELISTED_LEAVE_MSG = `— __**BOT USAGE DENIED**__ —\n\nThis server has been blacklisted.\n\n*Leaving server...*`;
 
 module.exports = {
@@ -18,9 +18,9 @@ module.exports = {
       );
       if (messageSendableChannel != null)
         if (bluegariaDetected) {
-          messageSendableChannel.send(BLUEGARIA_HERE_UNWHITELISTED_LEAVE_MSG);
+          await messageSendableChannel.send(BLUEGARIA_HERE_UNWHITELISTED_LEAVE_MSG);
         } else {
-          messageSendableChannel.send(BLUEGARIA_ABSENT_LEAVE_MSG);
+          await messageSendableChannel.send(BLUEGARIA_ABSENT_LEAVE_MSG);
         }
 
       await guild.leave();
@@ -38,7 +38,7 @@ module.exports = {
       }
     } else {
       bluegariaDetected = true;
-      if (server.whitelisted === false) {
+      if (server != null && server?.whitelisted === false) {
         await leaveServer();
       }
     }
