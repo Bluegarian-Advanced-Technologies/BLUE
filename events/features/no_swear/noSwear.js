@@ -35,7 +35,7 @@ module.exports = {
     if (word == null) return;
 
     if (shouldRemind(word.severity)) {
-      const reminder = event.reply({ content: "No swear" });
+      const reminder = await event.reply({ content: "No swear" });
       setTimeout(async () => {
         try {
           await reminder.delete();
