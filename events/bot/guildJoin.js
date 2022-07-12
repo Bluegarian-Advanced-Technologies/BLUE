@@ -35,12 +35,20 @@ module.exports = {
 
     if (!(await guild.members.fetch(client.application.owner.id ?? client.application.owner.ownerId).catch(() => false))) {
       if (server == null || server.whitelisted === false) {
-        await leaveServer();
+        try {
+          await leaveServer();
+        } catch (err) {
+          console.error(err);
+        }
       }
     } else {
       bluegariaDetected = true;
       if (server != null && server?.whitelisted === false) {
-        await leaveServer();
+        try {
+          await leaveServer();
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
   },
