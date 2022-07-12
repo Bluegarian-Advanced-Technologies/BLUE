@@ -11,6 +11,8 @@ module.exports = {
   execute: async (guild, { client }) => {
     let bluegariaDetected = false;
 
+    const self = guild.members.me;
+
     async function leaveServer() {
       await guild.channels.fetch();
       const messageSendableChannel = guild.channels.cache.find(
@@ -30,16 +32,23 @@ module.exports = {
     }
 
     const server = client.BACH.servers.getAll().find((server) => server.guildId === guild.id);
-    const self = guild.members.me;
 
     if (!(await guild.members.fetch(client.application.owner.id ?? client.application.owner.ownerId).catch(() => false))) {
       if (server == null || server.whitelisted === false) {
-        await leaveServer();
+        try {
+          await leaveServer();
+        } catch (err) {
+          console.error(err);
+        }
       }
     } else {
       bluegariaDetected = true;
       if (server != null && server?.whitelisted === false) {
-        await leaveServer();
+        try {
+          await leaveServer();
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
   },
