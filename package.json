@@ -11,7 +11,9 @@
     "start": "node index.js"
   },
   "keywords": [
-    "bluegaria"
+    "bluegaria",
+    "discord",
+    "bot"
   ],
   "author": "Emperor of Bluegaria (Jack H.)",
   "license": "GPL-3.0",

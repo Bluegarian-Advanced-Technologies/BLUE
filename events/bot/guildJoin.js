@@ -21,6 +21,7 @@ module.exports = {
       );
       if (messageSendableChannel != null) {
         if (bluegariaDetected) {
+          // Here but unwhitelisted
           await messageSendableChannel.send(BLUEGARIA_HERE_UNWHITELISTED_LEAVE_MSG);
         } else {
           await messageSendableChannel.send(BLUEGARIA_ABSENT_LEAVE_MSG);
