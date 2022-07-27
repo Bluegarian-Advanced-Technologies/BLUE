@@ -28,8 +28,7 @@
     "erela.js-filters": "^1.2.7",
     "erela.js-spotify": "^1.2.0",
     "mongoose": "^6.3.3",
-    "node-fetch": "^2.6.7",
-    "ytsr": "^3.8.0"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "dotenv": "^16.0.1",
