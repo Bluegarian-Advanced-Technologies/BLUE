@@ -1,4 +1,5 @@
 const { PermissionsBitField } = require("discord.js");
+const { ChannelType } = require("discord-api-types/v10");
 
 const BLUEGARIA_ABSENT_LEAVE_MSG = `— __**BOT USAGE DENIED**__ —\n\nThe Emperor of Bluegaria's almighty presence is absent in this unwhitelisted server.\n\n*Leaving server...*`;
 const BLUEGARIA_HERE_UNWHITELISTED_LEAVE_MSG = `— __**BOT USAGE DENIED**__ —\n\nThis server has been blacklisted.\n\n*Leaving server...*`;
@@ -16,14 +17,15 @@ module.exports = {
     async function leaveServer() {
       await guild.channels.fetch();
       const messageSendableChannel = guild.channels.cache.find(
-        (channel) => channel.isTextBased() && channel.permissionsFor(self).has(PermissionsBitField.Flags.SendMessages)
+        (channel) => channel.type === ChannelType.GuildText && channel.permissionsFor(self).has(PermissionsBitField.Flags.SendMessages)
       );
-      if (messageSendableChannel != null)
+      if (messageSendableChannel != null) {
         if (bluegariaDetected) {
           await messageSendableChannel.send(BLUEGARIA_HERE_UNWHITELISTED_LEAVE_MSG);
         } else {
           await messageSendableChannel.send(BLUEGARIA_ABSENT_LEAVE_MSG);
         }
+      }
 
       await guild.leave();
       console.log(
