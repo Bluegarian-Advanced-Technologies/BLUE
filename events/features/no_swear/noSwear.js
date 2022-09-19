@@ -1,14 +1,6 @@
-const LiveCollection = require("../../../classes/LiveCollection.js");
-const swearWord = require("../../../models/swearWord.js");
-
-const swearWords = new LiveCollection(swearWord);
+const calculateSwear = require("./calculateSwear");
 
 const localSwearWords = require("./swearWords.json");
-
-function shouldRemind(severity = 1) {
-  const die = Math.floor(Math.random() * 10);
-  return die + severity > 5;
-}
 
 module.exports = {
   id: "no_swear",
@@ -16,9 +8,9 @@ module.exports = {
   eventType: "messageCreate",
 
   init: async () => {
-    await swearWords.init();
+    await calculateSwear.words.swearWords.init();
 
-    swearWords.updateCache((words) => {
+    calculateSwear.words.swearWords.updateCache((words) => {
       for (const key in localSwearWords) {
         words.push({
           word: key,
@@ -31,16 +23,6 @@ module.exports = {
   execute: async (event, {}) => {
     if (event.author?.bot) return;
 
-    const word = swearWords.getAll().find((word) => event.content.toLowerCase().includes(word.word));
-    if (word == null) return;
-
-    if (shouldRemind(word.severity)) {
-      const reminder = await event.reply({ content: "No swear" });
-      setTimeout(async () => {
-        try {
-          await reminder.delete();
-        } catch {}
-      }, 4500);
-    }
+    await calculateSwear.checkSwearWord(event, true);
   },
 };

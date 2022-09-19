@@ -98,7 +98,7 @@ module.exports = {
         try {
           client.channels.cache
             .get(player.textChannel)
-            .send({ embeds: [embedMessage("Error occured with current track: " + error.exception, `${error.error}`, "error")] });
+            .send({ embeds: [embedMessage("Error occured with current track: " + error.exception.cause, `${error.error}`, "error")] });
         } catch (err) {
           console.error(err);
         }
@@ -140,6 +140,7 @@ module.exports = {
     const acknowledge = await embedReply("Preparing to play...", null, undefined, false, {
       fetchReply: true,
     });
+    if (!acknowledge) return;
 
     const results = await client.audioManager.search(song, user);
 

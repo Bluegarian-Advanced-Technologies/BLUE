@@ -118,6 +118,8 @@ async function initialize(client, config = {}) {
       if (!command) return;
 
       async function sendMessage(content = "", ping = false, options = {}) {
+        if (!message.channel.permissionsFor(message.guild.members.me).has([PermissionsBitField.Flags.SendMessages])) return false;
+
         content == null ? null : content.substring(0, 2000);
 
         const reply = {
@@ -132,6 +134,7 @@ async function initialize(client, config = {}) {
       }
 
       async function messageReply(content = "", ping = false, options = {}) {
+        if (!message.channel.permissionsFor(message.guild.members.me).has([PermissionsBitField.Flags.SendMessages])) return false;
         content == null ? null : content.substring(0, 2000);
 
         const reply = {
@@ -146,6 +149,8 @@ async function initialize(client, config = {}) {
       }
 
       async function embedMessageReply(title, text, status, ping = false, options = {}) {
+        if (!message.channel.permissionsFor(message.guild.members.me).has([PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.AttachFiles]))
+          return false;
         const reply = {
           embeds: [embedMessage(title, text, status)],
           allowedMentions: {
@@ -164,7 +169,7 @@ async function initialize(client, config = {}) {
           "warn"
         );
         setTimeout(() => {
-          reply.delete().catch(() => {});
+          reply?.delete().catch(() => {});
         }, 5000);
         return;
       }
@@ -180,7 +185,7 @@ async function initialize(client, config = {}) {
 
       if (
         command.permissions != null &&
-        !command.permissions.every((flag) => message.member.permissions.has(PermissionsBitField.Flags[flag])) &&
+        !command.permissions.every((flag) => message.channel.permissionsFor(message.member).has(PermissionsBitField.Flags[flag])) &&
         message.author.id !== client.application.owner.id
       )
         return await embedMessageReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");
@@ -461,7 +466,7 @@ async function initialize(client, config = {}) {
 
     if (
       command.permissions &&
-      !command.permissions.every((flag) => interaction.member.permissions.has(PermissionsBitField.Flags[flag])) &&
+      !command.permissions.every((flag) => interaction.channel.permissionsFor(interaction.member).has(PermissionsBitField.Flags[flag])) &&
       interaction.user.id !== client.application.owner.id
     )
       return await embedInteractionReply("Invalid Permissions", `You require \`${command.permissions.join(", ")}\` permissions to run this command`, "error");

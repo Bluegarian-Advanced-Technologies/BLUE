@@ -10,6 +10,9 @@ async function initialize(client, eventsDir) {
 
   for (let i = 0; i < events.length; i++) {
     const event = require(events[i]);
+
+    if (event.notEvent) continue;
+
     try {
       let on = "on";
       if (event.once) on = "once";
