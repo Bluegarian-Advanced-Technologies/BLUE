@@ -259,6 +259,8 @@ module.exports = {
       fetchReply: true,
     });
 
+    if (!message) return;
+
     activeDefinitions.set(message.id, {
       isUrban,
       index: 0,

@@ -4,7 +4,7 @@
   "description": "Bluegarian Logistics Universal Emulator",
   "main": "index.js",
   "engines": {
-    "node": "17.x"
+    "node": "18.x"
   },
   "scripts": {
     "dev": "nodemon index.js",
@@ -27,6 +27,7 @@
     "erela.js": "^2.3.3",
     "erela.js-filters": "^1.2.7",
     "erela.js-spotify": "^1.2.0",
+    "googleapis": "^107.0.0",
     "mongoose": "^6.3.3",
     "node-fetch": "^2.6.7"
   },

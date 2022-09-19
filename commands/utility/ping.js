@@ -6,7 +6,7 @@ module.exports = {
   slash: "both",
   expectedArgs: [],
 
-  execute: (cmd, { client, args, isInteraction, reply }) => {
-    reply(`☑ Latency: **${new Date().getTime() - cmd.createdTimestamp}**ms | Bot latency: **${client.ws.ping}**ms`);
+  execute: async (cmd, { client, reply }) => {
+    await reply(`☑ Latency: **${new Date().getTime() - cmd.createdTimestamp}**ms | Bot latency: **${client.ws.ping}**ms`);
   },
 };
