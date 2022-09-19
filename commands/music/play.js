@@ -1,4 +1,4 @@
-const { Manager } = require("erela.js");
+const { Manager } = require("@nextium/erela.js");
 const Spotify = require("erela.js-spotify");
 const Filters = require("erela.js-filters");
 

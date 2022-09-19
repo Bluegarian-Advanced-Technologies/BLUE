@@ -1,5 +1,8 @@
 if (process.env.NODE_ENV !== "production") require("dotenv").config();
 
+const moduleAlias = require("module-alias");
+moduleAlias.addAlias("erela.js", __dirname + "/node_modules/@nextium/erela.js");
+
 console.time("Bot start time");
 
 const { Client, IntentsBitField } = require("discord.js");
