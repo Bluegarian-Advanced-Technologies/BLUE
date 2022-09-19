@@ -142,31 +142,36 @@ module.exports = {
     });
     if (!acknowledge) return;
 
-    const results = await client.audioManager.search(song, user);
-
-    if (results.loadType === "NO_MATCHES" || results.loadType === "LOAD_FAILED") {
-      return await send("No song found", `<@${user.id}>`, "warn");
-    }
-
     const player = client.audioManager.create({
       guild: guildId,
       voiceChannel: vc,
       textChannel: channelId,
     });
 
+    if (player.textChannel !== channelId) {
+      player.setTextChannel(channelId);
+    }
+
+    const results = await client.audioManager.search(song, user);
+
+    if (results.loadType === "NO_MATCHES" || results.loadType === "LOAD_FAILED") {
+      return await send("No song found", `<@${user.id}>`, "warn");
+    }
+
     if (!validateYTURL(args[0]) && args[1] === "yee_yee_yee") {
       if (client.playStore.get(`${user.id}_${guildId}`)) {
         return await send("A select menu is already active", null, "warn");
       }
       const menu = new SelectMenuBuilder()
-        .addOptions(
-          results.tracks
+        .addOptions([
+          ...results.tracks
             .map((track, i) => ({
               label: track.title,
               value: i.toString(),
             }))
-            .slice(0, 25)
-        )
+            .slice(0, 24),
+          { label: "Cancel", value: "cancel" },
+        ])
         .setCustomId(`play_${user.id}_${guildId}`);
       client.playStore.set(`${user.id}_${guildId}`, results.tracks);
       send(`${member}`, false, { components: [new ActionRowBuilder({ components: [menu] })] });
