@@ -58,10 +58,7 @@ function createDictEmbed(raw, definition, innerIndex = 0) {
 async function getDictWord(word = "") {
   const result = await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/" + word).catch((err) => console.error(err));
 
-  switch (result.status) {
-    case 404:
-      return false;
-  }
+  if (!result.ok) return false;
 
   const rawDefs = await result.json();
 
@@ -125,12 +122,7 @@ function createUrbanDictEmbed(raw, definition) {
 async function getUrbanDictWord(word = "") {
   const request = await fetch(`https://www.urbandictionary.com/define.php?term=${word}`);
 
-  switch (request.status) {
-    case 404:
-    case 500:
-      return false;
-      break;
-  }
+  if (!result.ok) return false;
 
   const html = await request.text();
 
