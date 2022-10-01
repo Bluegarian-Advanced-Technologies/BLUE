@@ -66,7 +66,7 @@ module.exports = {
       return await embedReply("Not in corresponding V.C.", "You must be in the same voice channel as the bot to use this command.", "error");
     switch (subcommand) {
       case "list": {
-        if (player?.queue?.length == 0) return await embedReply("Queue is empty");
+        if (player?.queue?.length == 0 && !player.playing) return await embedReply("Queue is empty");
 
         const embed = new EmbedBuilder().setTitle("— Queue —").setColor(colors.primary);
         let queueList = `Currently playing: \n[${player.queue.current.title}](${player.queue.current.uri}) | ~${formatMS(
@@ -101,7 +101,7 @@ module.exports = {
           },
           {
             name: "Total tracks",
-            value: `${player.queue.length}`,
+            value: `${player.queue.length + player.playing ? 1 : 0}`,
             inline: true,
           },
         ]);

@@ -127,6 +127,14 @@ module.exports = {
         } catch (err) {
           console.error(err);
         }
+      })
+      .on("playerDisconnect", (player) => {
+        try {
+          if (client.expectedAudioEvents.get(player.guild) === "disconnect") return;
+          player.destroy();
+        } catch (err) {
+          console.error(err);
+        }
       });
     client.playStore = new Map();
     client.expectedAudioEvents = new Map();
