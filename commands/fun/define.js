@@ -127,6 +127,7 @@ async function getUrbanDictWord(word = "") {
 
   switch (request.status) {
     case 404:
+    case 500:
       return false;
       break;
   }
@@ -152,12 +153,17 @@ async function getUrbanDictWord(word = "") {
 
     definitionIds.push(id);
 
+    const word = wordEl.text().slice(0, 240);
+    const definitionText = meaningEl.find("br").replaceWith("\n").end().text().slice(0, 4096);
+    const example = exampleEl.find("br").replaceWith("\n").end().text().slice(0, 1024);
+    const contributor = contributorEl.text();
+
     definitions.push({
       id,
-      word: wordEl.text().slice(0, 240),
-      definition: meaningEl.find("br").replaceWith("\n").end().text().slice(0, 4096),
-      example: exampleEl.find("br").replaceWith("\n").end().text().slice(0, 1024),
-      contributor: contributorEl.text(),
+      word,
+      definition: definitionText,
+      example: example ? example : ".",
+      contributor: contributor ? contributor : "Unknown",
       upvotes: null,
       downvotes: null,
     });
