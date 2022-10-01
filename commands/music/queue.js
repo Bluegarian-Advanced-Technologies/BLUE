@@ -73,6 +73,7 @@ module.exports = {
           player.queue.current.duration - player.position,
           true
         ).padStart(5, "00:")} left | <@${player.queue.current.requester.id}>${player.trackRepeat ? " | *LOOPING*" : ""}\n\n`;
+        
         for (var i = 0; i < player.queue.length; i++) {
           if (i === 0) {
             queueList += `**— Coming up —**\n\n1. ${

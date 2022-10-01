@@ -7,6 +7,8 @@ const { createMusicEmbed, validateYTURL } = require("./musicUtils");
 
 const { ActionRowBuilder, SelectMenuBuilder } = require("discord.js");
 
+const url = require("url");
+
 module.exports = {
   id: "play",
   description: "Plays music in V.C.",
@@ -17,15 +19,15 @@ module.exports = {
   expectedArgs: [
     {
       type: "String",
-      name: "song",
-      description: "Desired song name/URL",
+      name: "track",
+      description: "Desired track name/URL",
       trailing: true,
       required: true,
     },
     {
       type: "String",
       name: "choose",
-      description: "Manually select song from query list",
+      description: "Manually select track from query list",
       options: [
         {
           name: "Yes",
@@ -59,7 +61,13 @@ module.exports = {
       .on("nodeConnect", (node) => console.log(`Node ${node.options.identifier} connected`))
       .on("nodeError", (node, error) => console.log(`Node ${node.options.identifier} had an error: ${error.message}`))
       .on("trackStart", (player, track) => {
+        console.log(track);
+
         try {
+          if (track.startTime != null) {
+            player.seek(track.startTime * 1000);
+          }
+
           client.channels.cache.get(player.textChannel).send({
             embeds: [
               createMusicEmbed({
@@ -87,9 +95,7 @@ module.exports = {
       })
       .on("trackStuck", (player) => {
         try {
-          client.channels.cache
-            .get(player.textChannel)
-            .send({ embeds: [embedMessage("Current track stuck", "This track has been detected as stuck", "warn")] });
+          client.channels.cache.get(player.textChannel).send({ embeds: [embedMessage("Current track stuck", "The track has been detected as stuck", "warn")] });
         } catch (err) {
           console.error(err);
         }
@@ -196,6 +202,10 @@ module.exports = {
         }
         if (!player.playing && !player.paused && player.queue.length === results.tracks.length - 1) player.play();
       } else {
+        const startTime = url.parse(song, true).query?.t;
+
+        if (startTime != null) results.tracks[0].startTime = Number(startTime);
+
         player.queue.add(results.tracks[0]);
 
         if (player.queue.length > 0) {
