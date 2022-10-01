@@ -41,7 +41,7 @@ async function checkSwearWord(event) {
       async (err, response) => {
         if (err) console.error(err);
 
-        if (response.data.attributeScores.TOXICITY.summaryScore.value < 0.5) return;
+        if (response.data.attributeScores.TOXICITY.summaryScore.value < 0.8) return;
 
         const reminder = await event.reply({ content: "No swear" });
 
