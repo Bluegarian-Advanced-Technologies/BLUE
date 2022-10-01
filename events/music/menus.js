@@ -21,6 +21,9 @@ module.exports = {
       }
 
       const track = client.playStore.get(combinedId)[parseInt(interaction.values[0])];
+
+      if (track === "cancel") return client.playStore.delete(combinedId);
+
       if (player) {
         player.connect();
         player.queue.add(track);
