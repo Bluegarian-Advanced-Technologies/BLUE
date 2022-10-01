@@ -122,7 +122,7 @@ function createUrbanDictEmbed(raw, definition) {
 async function getUrbanDictWord(word = "") {
   const request = await fetch(`https://www.urbandictionary.com/define.php?term=${word}`);
 
-  if (!result.ok) return false;
+  if (!request.ok) return false;
 
   const html = await request.text();
 
