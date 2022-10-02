@@ -61,8 +61,6 @@ module.exports = {
       .on("nodeConnect", (node) => console.log(`Node ${node.options.identifier} connected`))
       .on("nodeError", (node, error) => console.log(`Node ${node.options.identifier} had an error: ${error.message}`))
       .on("trackStart", (player, track) => {
-        console.log(track);
-
         try {
           if (track.startTime != null) {
             player.seek(track.startTime * 1000);
