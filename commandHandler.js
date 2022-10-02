@@ -522,6 +522,15 @@ async function initialize(client, config = {}) {
       if (command.subcommanded == null) {
         interactionOption = interaction.options.get(arg.name);
         if (!arg.required && interactionOption == null) continue;
+        if (interactionOption?.value == null) {
+          console.error(`Execting command ${command.id}`, `Failure on argument`, arg.name);
+
+          await interactionReply(
+            "**UNEXPECTED ERROR**\nThe notorious unreproducable error has struck again! The command will not be executed.\n\n||<@577195213068566529>||"
+          );
+
+          return;
+        }
         args.push(interactionOption.value);
       } else {
         if (arg.name !== subcommand) continue;
