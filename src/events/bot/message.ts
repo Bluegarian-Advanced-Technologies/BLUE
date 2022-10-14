@@ -69,7 +69,7 @@ export default new Event({
             if (int < expectedArg.minValue) return new Error(`Integer smaller than min value of ${expectedArg.minValue}: at argument ${i + 1}: ${expectedArg.name}`);
           if (expectedArg.maxValue != null)
             if (int > expectedArg.maxValue) return new Error(`Integer smaller than max value of ${expectedArg.maxValue}: at argument ${i + 1}: ${expectedArg.name}`);
-          return int;
+            return int;
         }
         case ApplicationCommandOptionType.Number: {
           const num = parseFloat(arg);
@@ -173,7 +173,7 @@ export default new Event({
         if (expectedArgs[i].choices) {
           const optionsList = [];
 
-          for (let j = 0; j < expectedArgs[i].choices!.length; ++j) {
+          for (let j = 0; j < expectedArgs[i].choices!.length; j++) {
             if (expectedArgs[i].choices![j].name.toLowerCase() === options[i].toLowerCase()) 
               richOptions.push(expectedArgs[i].choices![j].value);
             optionsList.push(expectedArgs[i].choices![j].name);
