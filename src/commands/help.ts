@@ -127,7 +127,6 @@ export default new Command({
     },
   ],
   disableExempted: true,
-  permissions: []
 }, async (client, context) => {
   const helpEmbed = new EmbedBuilder()
     .setColor(settings.colors.primary as ColorResolvable)
