@@ -69,7 +69,7 @@ export default new Command({
       ])
       .setCustomId(`play_${context.user.id}_${context.guild.id}`);
     client.playStore.set(`${context.user.id}_${context.guild.id}`, results.tracks);
-    context.reply({ 
+    await context.reply({ 
       content: `${context.member}`, 
       // @ts-expect-error Components are typed weirdly
       components: [new ActionRowBuilder({ components: [menu] })] 
@@ -78,12 +78,16 @@ export default new Command({
     player.connect();
 
     if (results.loadType === "PLAYLIST_LOADED") {
-      await context.reply({
-        embeds: [embedMessage("++🎶 Songs added to queue", results.playlist?.name)],
-      });
       for (let i = 0; i < results.tracks.length; i++) {
         const track = results.tracks[i];
         player.queue.add(track);
+      }
+      if (player.queue.length > 0) {
+        await context.reply({
+          embeds: [embedMessage("++🎶 Songs added to queue", results.playlist?.name)],
+        });
+      } else {
+        await context.embedReply("Preparing to play...");
       }
       if (!player.playing && !player.paused && player.queue.length === results.tracks.length - 1) player.play();
     } else {
@@ -107,6 +111,8 @@ export default new Command({
             }),
           ],
         });
+      } else {
+        await context.embedReply("Preparing to play...");
       }
       if (!player.playing && !player.paused && !player.queue.size) player.play();
     }
