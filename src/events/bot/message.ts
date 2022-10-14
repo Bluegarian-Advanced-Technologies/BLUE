@@ -45,16 +45,6 @@ export default new Event({
     const matches = parameters.join(" ").match(/"([^"\\]*(?:\\.[^"\\]*)*)"\S*|\S+/g);
     const options = matches?.map((match) => match.replace(/(?<!\\)(?:"|\\)/g, "").trim()) ?? [];
 
-    const context = Context.create(client, message, {
-      subcommand,
-      options 
-    });
-
-    const reply = await client.bach.runCommandChecks(command, context);
-    if (reply) return;
-
-    // client.bach.runPreflightChecks(context);
-
     const validateArg = async (arg: string, expectedArg: ApplicationCommandOptionData, i: number) => {
       switch (expectedArg.type) {
         case ApplicationCommandOptionType.String: {
@@ -140,14 +130,18 @@ export default new Event({
     const richOptions: OptionType[] = [];
     if (command.hasSubcommands) {
       const subcommandRaw = command.options.find((sub) => sub.name === subcommand) as ApplicationCommandSubCommandData | undefined;
-      if (subcommandRaw == null) return await context.embedReply("Invalid subcommand", "Please provide a valid subcommand", "error");
+      if (subcommandRaw == null) return await message.reply({
+        embeds: [embedMessage("Invalid subcommand", "Please provide a valid subcommand", "error")]
+      });
       // const validationResult = validateSubcommand(subcommandRaw as ApplicationCommandSubCommandData);
       // if (subcommandRaw == null)
       //   return new Error(`Unknown subcommand, expected ${command.options.reduce((total, value) => total + value.name + " | ", "")}`);
       for (let i = 0; i < subcommandRaw.options!.length; i++) {
         const expectedArg = subcommandRaw.options![i] as ApplicationCommandPrimitiveData;
         if (options[i] == null && expectedArg.required === true) 
-          return await context.embedReply("Invalid usage!", `${expectedArg.name} is required`, "error", false);
+          return await message.reply({
+            embeds: [embedMessage("Invalid usage!", `${expectedArg.name} is required`, "error")]
+          });
         if (expectedArg.choices) {
           const optionsList = [];
 
@@ -156,11 +150,15 @@ export default new Event({
               richOptions.push(expectedArg.choices[j].value);
             optionsList.push(expectedArg.choices[j].name);
           }
-          return await context.embedReply("Invalid usage!", `${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`, "error", false);
+          return await message.reply({
+            embeds: [embedMessage("Invalid usage!", `${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`, "error")]
+          });
         } else {
           const result = await validateArg(options[i], expectedArg, i);
           if (result instanceof Error) {
-            return await context.embedReply("Invalid usage!", result.message, "error", false);
+            return await message.reply({
+              embeds: [embedMessage("Invalid usage!", result.message, "error")]
+            });
           }
           richOptions.push(result);
         }
@@ -169,7 +167,9 @@ export default new Event({
       const expectedArgs = command.options as ApplicationCommandPrimitiveData[];
       for (let i = 0; i < expectedArgs.length; i++) {
         if (options[i] == null && expectedArgs[i].required) 
-          return await context.embedReply("Invalid usage!", `${expectedArgs[i].name} is required`, "error", false);
+          return await message.reply({
+            embeds: [embedMessage("Invalid usage!", `${expectedArgs[i].name} is required`, "error")]
+          });
         if (expectedArgs[i].choices) {
           const optionsList = [];
 
@@ -178,16 +178,30 @@ export default new Event({
               richOptions.push(expectedArgs[i].choices![j].value);
             optionsList.push(expectedArgs[i].choices![j].name);
           }
-          return await context.embedReply("Invalid usage!", `${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArgs[i].name}`, "error", false);
+          return await message.reply({
+            embeds: [embedMessage("Invalid usage!", `${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArgs[i].name}`, "error")]
+          });
         } else {
           const result = await validateArg(options[i], expectedArgs[i], i);
           if (result instanceof Error) {
-            return await context.embedReply("Invalid usage!", result.message, "error", false);
+            return await message.reply({
+              embeds: [embedMessage("Invalid usage!", result.message, "error")]
+            });
           }
           richOptions.push(result);
         }
       }
     }
+
+    const context = Context.create(client, message, {
+      subcommand,
+      options: richOptions
+    });
+
+    const reply = await client.bach.runCommandChecks(command, context);
+    if (reply) return;
+
+    // client.bach.runPreflightChecks(context);
 
     try {
       await command.execute(client, context);
