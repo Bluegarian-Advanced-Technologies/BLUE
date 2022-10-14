@@ -170,7 +170,7 @@ export default new Event({
           return await message.reply({
             embeds: [embedMessage("Invalid usage!", `${expectedArgs[i].name} is required`, "error")]
           });
-        if (expectedArgs[i].choices) {
+        if (expectedArgs[i].choices && expectedArgs[i].required) {
           const optionsList = [];
 
           for (let j = 0; j < expectedArgs[i].choices!.length; j++) {
