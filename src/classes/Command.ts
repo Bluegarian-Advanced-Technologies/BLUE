@@ -50,7 +50,7 @@ class Command {
     }
 
     get hasSubcommands() {
-        return this.options.every(option => 
+        return this.options.length === 0 ? false : this.options.every(option => 
             option.type === ApplicationCommandOptionType.Subcommand || 
             option.type === ApplicationCommandOptionType.SubcommandGroup
         );
