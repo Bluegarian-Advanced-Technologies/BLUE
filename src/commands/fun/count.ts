@@ -44,7 +44,6 @@ export default new Command({
       options: [] 
     },
   ],
-  permissions: []
 }, async (client, context) => {
   const stopCount = (counter: NodeJS.Timer) => {
     clearInterval(counter);

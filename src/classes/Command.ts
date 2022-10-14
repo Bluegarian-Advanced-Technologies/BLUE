@@ -8,13 +8,13 @@ interface CommandOptions {
     description: string;
     category: string;
     aliases: string[];
-    permissions: (keyof typeof PermissionsBitField.Flags)[];
     slash: boolean | "both";
     options: ApplicationCommandOptionData[];
     cooldown?: number;
-    elevation?: number;
     disableExempted?: boolean;
+    elevation?: number;
     hidden?: boolean;
+    permissions?: (keyof typeof PermissionsBitField.Flags)[];
 }
 
 class Command {
@@ -39,7 +39,7 @@ class Command {
         this.description = options.description;
         this.category = options.category;
         this.aliases = options.aliases;
-        this.permissions = options.permissions;
+        this.permissions = options.permissions ?? [];
         this.cooldown = options.cooldown ?? 1;
         this.elevation = options.elevation ?? 1;
         this.disableExempted = options.disableExempted ?? false;

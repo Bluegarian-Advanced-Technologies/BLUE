@@ -217,7 +217,6 @@ export default new Command({
       description: "Force urban dictionary check of definition",
     },
   ],
-  permissions: [],
 }, async (client, context) => {
   const word = (context.options[0] as string).toLowerCase();
   let isUrban = context.options[1] as boolean | undefined;

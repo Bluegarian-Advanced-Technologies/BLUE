@@ -84,7 +84,6 @@ export default new Command({
       options: [],
     },
   ],
-  permissions: [],
 }, async (client, context) => {
   switch (context.subcommand) {
     case "server": {

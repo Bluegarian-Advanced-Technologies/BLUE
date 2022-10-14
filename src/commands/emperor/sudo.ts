@@ -18,9 +18,7 @@ export default new Command({
       required: true,
     },
   ],
-  permissions: [],
 }, async (client, context) => {
-
   try {
     const js = context.options[0] as string;
     eval(js.replace("client.token", "'fuck you'"));

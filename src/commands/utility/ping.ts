@@ -7,7 +7,6 @@ export default new Command({
   options: [],
   aliases: ["pi"],
   slash: "both",
-  permissions: [],
 }, async (client, context) => {
   await context.reply(`☑ Latency: **${new Date().getTime() - context.createdTimestamp}**ms | Bot latency: **${client.ws.ping}**ms`);
 });
