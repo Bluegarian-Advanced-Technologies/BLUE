@@ -1,12 +1,10 @@
-import { ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandChannelOptionData, ApplicationCommandNonOptionsData, ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData } from "discord.js";
-import { OptionType } from "../../classes/BACH";
+import { ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData } from "discord.js";
+import { ApplicationCommandPrimitiveData, OptionType } from "../../classes/BACH";
 import Command from "../../classes/Command";
 import { Context } from "../../classes/Context";
 import Event from "../../classes/Event";
 import settings from "../../settings.json" assert { type: "json" };
 import { checkBoolean, embedMessage } from "../../utilities";
-
-type ApplicationCommandPrimitiveData = Exclude<ApplicationCommandOptionData, ApplicationCommandNonOptionsData | ApplicationCommandSubGroupData | ApplicationCommandSubCommandData | ApplicationCommandChannelOptionData | ApplicationCommandAutocompleteNumericOptionData | ApplicationCommandAutocompleteStringOptionData>;
 
 export default new Event({
   id: "message",

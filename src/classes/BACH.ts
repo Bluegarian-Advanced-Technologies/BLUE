@@ -1,4 +1,4 @@
-import { ApplicationCommandStringOptionData, ChatInputApplicationCommandData, ClientEvents, Collection, GuildBasedChannel, PermissionsBitField, Role, User } from "discord.js";
+import { ApplicationCommandAutocompleteNumericOptionData, ApplicationCommandAutocompleteStringOptionData, ApplicationCommandChannelOptionData, ApplicationCommandNonOptionsData, ApplicationCommandOptionData, ApplicationCommandStringOptionData, ApplicationCommandSubCommandData, ApplicationCommandSubGroupData, ChatInputApplicationCommandData, ClientEvents, Collection, GuildBasedChannel, PermissionsBitField, Role, User } from "discord.js";
 
 import disabledCommands from "../models/disabledCommands";
 import disabledEvents from "../models/disabledEvents";
@@ -35,6 +35,8 @@ interface RestrictedChannelCommand {
 }
 
 export type OptionType = GuildBasedChannel | User | Role | number | string | boolean | undefined;
+
+export type ApplicationCommandPrimitiveData = Exclude<ApplicationCommandOptionData, ApplicationCommandNonOptionsData | ApplicationCommandSubGroupData | ApplicationCommandSubCommandData | ApplicationCommandChannelOptionData | ApplicationCommandAutocompleteNumericOptionData | ApplicationCommandAutocompleteStringOptionData>;
 
 class BACH {
   client: Client;
