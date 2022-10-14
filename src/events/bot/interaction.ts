@@ -40,47 +40,10 @@ export default new Event({
   const context = Context.create(client, interaction, {
     subcommand,
     options: flattenOptions()
-  })
+  });
 
   const reply = await client.bach.runCommandChecks(command, context);
   if (reply) return;
-
-  // const args = [];
-
-  // function subargParse(arg) {
-  //   for (const subarg of arg.expectedArgs) {
-  //     let interactionOption;
-  //     interactionOption = interaction.options["get" + subarg.type](subarg.name);
-  //     if (!arg.required && interactionOption == null) continue;
-  //     args.push(interactionOption);
-  //   }
-  // }
-
-  // for (const arg of command.options) {
-  //   let interactionOption;
-
-  //   if (
-  //     arg.type !== ApplicationCommandOptionType.SubcommandGroup && 
-  //     arg.type !== ApplicationCommandOptionType.Subcommand
-  //   ) {
-  //     interactionOption = interaction.options.get(arg.name);
-  //     if (!arg.required && interactionOption == null) continue;
-  //     if (interactionOption?.value == null) {
-  //       console.error(`Execting command ${command.id}`, `Failure on argument`, arg.name);
-
-  //       await interactionReply(
-  //         "**UNEXPECTED ERROR**\nThe notorious unreproducable error has struck again! The command will not be executed.\n\n||<@577195213068566529>||"
-  //       );
-
-  //       return;
-  //     }
-  //     args.push(interactionOption.value);
-  //   } else {
-  //     if (arg.name !== subcommand) continue;
-  //     subargParse(arg);
-  //     break;
-  //   }
-  // }
 
   try {
     await command.execute(client, context);
