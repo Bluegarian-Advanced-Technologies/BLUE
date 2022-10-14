@@ -110,13 +110,6 @@ export default new Event({
           }
           return roleObj;
         }
-        // case ApplicationCommandOptionType.Mentionable: {
-        //   const mentionable = arg.match(/<@(!|#|&)?(\d+)>/);
-        //   if (!mentionable) {
-        //     return new Error(`Not a mentionable: mentionable expected at argument: ${i + 1}, ${expectedArg.name}`);
-        //   }
-        //   return (arg = mentionable);
-        // }
 
         default: {
           console.warn("Unrecognized arg type");

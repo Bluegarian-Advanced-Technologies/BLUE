@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { ApplicationCommandOptionType } from "discord.js";
+import { ApplicationCommandOptionType, GuildBasedChannel, Role } from "discord.js";
 import { OptionType } from "../../classes/BACH";
 import Command from "../../classes/Command";
 import { Context } from "../../classes/Context";
@@ -28,7 +28,15 @@ export default new Event({
     interaction.options.data.forEach(option => {
       if (option.type === ApplicationCommandOptionType.Subcommand || option.type === ApplicationCommandOptionType.SubcommandGroup) {
         option.options?.forEach(subOption => {
-          result.push(subOption.value);
+          if (subOption.type === ApplicationCommandOptionType.User) {
+            result.push(subOption.user);
+          } else if (subOption.type === ApplicationCommandOptionType.Channel) {
+            result.push((subOption.channel as GuildBasedChannel | null | undefined) ?? undefined);
+          } else if (subOption.type === ApplicationCommandOptionType.Role) {
+            result.push((subOption.role as Role | null | undefined) ?? undefined);
+          } else {
+            result.push(subOption.value);
+          }
         });
       } else {
         result.push(option.value);

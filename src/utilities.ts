@@ -4,7 +4,7 @@ import path from "path";
 
 import settings from "./settings.json" assert { type: "json" };
 
-interface EmbedData {
+export interface EmbedData {
   color?: ColorResolvable;
   title?: string;
   url?: string;

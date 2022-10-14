@@ -24,12 +24,12 @@ interface Alias {
   alias: true;
 }
 
-interface RestrictedRoleCommand {
+export interface RestrictedRoleCommand {
   command: string;
   roles: string[];
 }
 
-interface RestrictedChannelCommand {
+export interface RestrictedChannelCommand {
   command: string;
   channels: string[];
 }
