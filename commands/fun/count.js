@@ -66,7 +66,9 @@ module.exports = {
           () => {
             currentCount += countSpeed;
 
-            channel.send(currentCount.toString());
+            channel.send(currentCount.toString()).catch(() => {
+              stopCount(count);
+            });
 
             if (currentCount === num2) {
               stopCount(count);

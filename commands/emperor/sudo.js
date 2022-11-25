@@ -16,10 +16,10 @@ module.exports = {
     },
   ],
 
-  execute: (cmd, { client, channel, args, isInteraction }) => {
+  execute: (cmd, { client, channel, guild, args, isInteraction }) => {
     try {
       const js = args.join(" ");
-      eval(js.replace("client.token", "'fuck you'"));
+      eval(js.replace(/client.token|process.env/g, "'fuck you'"));
 
       if (isInteraction) return cmd.reply({ content: "Successfully executed command." });
 
