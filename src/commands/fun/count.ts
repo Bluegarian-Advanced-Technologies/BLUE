@@ -76,7 +76,7 @@ export default new Command({
         () => {
           currentCount += countSpeed;
 
-          context.channel.send(currentCount.toString());
+          context.channel.send(currentCount.toString()).catch(() => stopCount(count));
 
           if (currentCount === num2) {
             stopCount(count);
