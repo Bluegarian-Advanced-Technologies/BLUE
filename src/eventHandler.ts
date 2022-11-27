@@ -1,4 +1,4 @@
-import { ClientEvents } from "discord.js";
+import { ClientEvents, Guild } from "discord.js";
 import Client from "./classes/Client";
 import Event from "./classes/Event";
 
@@ -6,11 +6,11 @@ import { recursivelyGetFiles, importDefault } from "./utilities";
 
 const loadCommand = async<T extends keyof ClientEvents>(client: Client, path: string) => {
   const event = await importDefault(path) as Event<T>;
-  // FIXME: guild disabled events
   if (event.once) {
     client.once(event.eventType, async (...eventData) => {
-      // const guildDisabledEvents = client.bach.disabledEvents.getAll().find((doc) => doc.guildId === eventData?.[0]?.guild?.id);
-      // if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id)) return;
+      const guild = eventData[0] && eventData[0] instanceof Guild ? eventData[0] : undefined;
+      const guildDisabledEvents = client.bach.disabledEvents.getAll().find((doc) => doc.guildId === guild?.id);
+      if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id)) return;
 
       try {
         await event.execute(client, ...eventData);
@@ -20,8 +20,9 @@ const loadCommand = async<T extends keyof ClientEvents>(client: Client, path: st
     });
   } else {
     client.on(event.eventType, async (...eventData) => {
-      // const guildDisabledEvents = client.bach.disabledEvents.getAll().find((doc) => doc.guildId === eventData?.[0]?.guild?.id);
-      // if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id)) return;
+      const guild = eventData[0] && eventData[0] instanceof Guild ? eventData[0] : undefined;
+      const guildDisabledEvents = client.bach.disabledEvents.getAll().find((doc) => doc.guildId === guild?.id);
+      if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id)) return;
 
       try {
         await event.execute(client, ...eventData);
