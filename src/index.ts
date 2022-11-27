@@ -2,7 +2,7 @@ import { Database, Environment } from "@nextium/common";
 
 if (process.env.NODE_ENV !== "production") {
   Environment.load([
-    // "PERSPECTIVE_API_KEY",
+    "PERSPECTIVE_API_KEY",
     "BOT_ID", 
     "TOKEN", 
     "MONGODB_URI",
