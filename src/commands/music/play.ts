@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, ActionRowBuilder, SelectMenuBuilder, User } from "discord.js";
+import { ApplicationCommandOptionType, ActionRowBuilder, SelectMenuBuilder, User, MessageActionRowComponentBuilder } from "discord.js";
 import url from "url";
 
 import Command from "../../classes/Command";
@@ -71,8 +71,7 @@ export default new Command({
     client.playStore.set(`${context.user.id}_${context.guild.id}`, results.tracks);
     await context.reply({ 
       content: `${context.member}`, 
-      // @ts-expect-error Components are typed weirdly
-      components: [new ActionRowBuilder({ components: [menu] })] 
+      components: [new ActionRowBuilder<MessageActionRowComponentBuilder>({ components: [menu] })] 
     });
   } else {
     player.connect();

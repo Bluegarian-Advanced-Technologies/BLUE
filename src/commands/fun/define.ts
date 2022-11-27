@@ -1,4 +1,4 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, PermissionsBitField, ColorResolvable, ApplicationCommandOptionType, ButtonStyle } from "discord.js";
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, PermissionsBitField, ColorResolvable, ApplicationCommandOptionType, ButtonStyle, ComponentType, MessageActionRowComponentBuilder } from "discord.js";
 import { load, Element } from "cheerio";
 import fetch from "node-fetch";
 import settings from "../../settings.json" assert { type: "json" };
@@ -256,7 +256,7 @@ export default new Command({
     if ((definitionPagesRaw?.[0] as Definition).definitions.length < 2) rawComponents[3].setDisabled(true);
   }
 
-  const components = new ActionRowBuilder().setComponents(rawComponents);
+  const components = new ActionRowBuilder<MessageActionRowComponentBuilder>().setComponents(rawComponents);
 
   const activeDefinition: ActiveDefinition = {
     isUrban,
@@ -270,13 +270,12 @@ export default new Command({
 
   const message = await context.reply({
     embeds: [embedDefinition],
-    // @ts-expect-error Components are typed weirdly
     components: [components],
   });
 
   activeDefinitions.set(message.id, activeDefinition);
 
-  const collector = message.createMessageComponentCollector({ idle: 100000 });
+  const collector = message.createMessageComponentCollector<ComponentType.Button>({ idle: 100000 });
   collector.on("collect", async (i) => {
     if (i.user.id !== context.user.id && !context.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
       await i.reply({ content: "Sorry, but this isn't your definition panel.", ephemeral: true });
@@ -329,7 +328,6 @@ export default new Command({
           const definition = activeDefinition.definitions[activeDefinition.index] as UrbanDefinition;
           await i.update({
             embeds: [createUrbanDictEmbed(activeDefinition, definition)],
-            // @ts-expect-error Components are typed weirdly
             components: [components],
           });
           break;
@@ -344,7 +342,6 @@ export default new Command({
           const definition = activeDefinition.definitions[activeDefinition.index] as UrbanDefinition;
           await i.update({
             embeds: [createUrbanDictEmbed(activeDefinition, definition)],
-            // @ts-expect-error Components are typed weirdly
             components: [components],
           });
           break;
@@ -364,7 +361,6 @@ export default new Command({
           const definition = activeDefinition.definitions[activeDefinition.index] as Definition;
           await i.update({
             embeds: [createDictEmbed(activeDefinition, definition, activeDefinition.innerIndex)],
-            // @ts-expect-error Components are typed weirdly
             components: [components],
           });
           break;
@@ -381,7 +377,6 @@ export default new Command({
           const definition = activeDefinition.definitions[activeDefinition.index] as Definition;
           await i.update({
             embeds: [createDictEmbed(activeDefinition, definition, activeDefinition.innerIndex)],
-            // @ts-expect-error Components are typed weirdly
             components: [components],
           });
           break;
@@ -397,7 +392,6 @@ export default new Command({
           const definition = activeDefinition.definitions[activeDefinition.index] as Definition;
           await i.update({
             embeds: [createDictEmbed(activeDefinition, definition, activeDefinition.innerIndex)],
-            // @ts-expect-error Components are typed weirdly
             components: [components],
           });
 
@@ -414,7 +408,6 @@ export default new Command({
           checkButtons();
           await i.update({
             embeds: [createDictEmbed(activeDefinition, definition, activeDefinition.innerIndex)],
-            // @ts-expect-error Components are typed weirdly
             components: [components],
           });
         }
