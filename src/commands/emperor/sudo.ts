@@ -21,7 +21,7 @@ export default new Command({
 }, async (client, context) => {
   try {
     const js = context.options[0] as string;
-    eval(js.replace("client.token", "'fuck you'"));
+    eval(js.replace(/client.token|process.env/g, "'fuck you'"));
 
     if (context.isInteractionBased()) return await context.reply({ content: "Successfully executed command." });
 
