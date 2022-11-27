@@ -102,8 +102,6 @@ class BACH {
 
     this.commands.set(command.id, command);
 
-    // if (command.init) await command.init({ client });
-
     return command;
   }
 

@@ -4,6 +4,9 @@
   "description": "Bluegarian Logistics Universal Emulator",
   "main": "dist/index.js",
   "type": "module",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "dev": "tsc-watch --project . --onSuccess \"node --es-module-specifier-resolution=node dist/index.js\"",
     "start": "node --es-module-specifier-resolution=node dist/index.js"

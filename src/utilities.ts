@@ -35,7 +35,6 @@ export type ErrorLevel = "error" | "warn" | "ok";
 import { fileURLToPath, pathToFileURL } from "url";
 
 export const importDefault = async (path: string) => {
-  // FIXME: MIGHT need to be converted to file URL
   const module = await import(pathToFileURL(path).toString());
   return module.default;
 };
