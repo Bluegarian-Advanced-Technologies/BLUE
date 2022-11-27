@@ -134,3 +134,5 @@ console.timeEnd("Bot start time");
 
 // Relay voice data to Lavalink server
 client.on("raw", (data) => client.audioManager.updateVoiceState(data));
+
+process.on("unhandledRejection", e => console.error(e));

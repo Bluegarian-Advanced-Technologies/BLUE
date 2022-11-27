@@ -204,17 +204,9 @@ export default new Event({
 
     // client.bach.runPreflightChecks(context);
 
-    try {
-      await command.execute(client, context);
+    await command.execute(client, context);
 
-      client.bach.commandCooldowns.addCooldown(context.user.id, context.guild.id, command.cooldown);
-    } catch (e) {
-      console.error(e);
-      await message.reply({
-        content: `**FATAL EXCEPTION CAUGHT!**\n ||<@${client.application!.owner!.id}>||`,
-        embeds: [embedMessage((e as Error).name, (e as Error).message, "error")],
-      });
-    }
+    client.bach.commandCooldowns.addCooldown(context.user.id, context.guild.id, command.cooldown);
   } catch (e) {
     console.error(e);
     await message.reply({
