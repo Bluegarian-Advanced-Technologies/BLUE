@@ -8,6 +8,7 @@
     "node": "18.x"
   },
   "scripts": {
+    "build": "tsc",
     "dev": "tsc-watch --project . --onSuccess \"node --es-module-specifier-resolution=node dist/index.js\"",
     "start": "node --es-module-specifier-resolution=node dist/index.js"
   },
