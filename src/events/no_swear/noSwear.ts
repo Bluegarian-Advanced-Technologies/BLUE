@@ -9,5 +9,5 @@ export default new Event({
 }, async (client, message) => {
   if (message.author.bot) return;
 
-  // await checkSwearWord(message);
+  await checkSwearWord(message);
 });

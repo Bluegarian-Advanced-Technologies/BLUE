@@ -13,5 +13,5 @@ export default new Event({
     message = await message.fetch();
   }
 
-  // await checkSwearWord(message);
+  await checkSwearWord(message);
 });

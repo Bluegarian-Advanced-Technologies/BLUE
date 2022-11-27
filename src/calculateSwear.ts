@@ -1,26 +1,16 @@
 import { Message } from "discord.js";
-import { google } from "googleapis";
+
+import Perspective from "./perspective";
 
 import LiveCollection from "./classes/LiveCollection";
 import swearWords from "./models/swearWords";
 
 import localSwearWords from "./swearWords.json" assert { type: "json" };
 
+const client = new Perspective({ apiKey: process.env.PERSPECTIVE_API_KEY! });
 const swearWordsCollection = new LiveCollection(swearWords);
 
 const cooldownUsers: string[] = [];
-
-interface Comments {
-  analyze: (payload: { 
-    key: string, 
-    resource: Record<string, unknown> 
-  }, callback: (err: Error | null, res: { data: { 
-      attributeScores: { 
-        TOXICITY: { summaryScore: { value: number } } 
-      }, 
-      documentSentiment: { score: number } 
-  } }) => void) => void;
-}
 
 export const shouldRemind = (severity = 1) => {
   const die = Math.floor(Math.random() * 10);
@@ -37,7 +27,6 @@ export const checkSwearWord = async (event: Message) => {
   if (word == null) return;
 
   if (shouldRemind(word.severity) && !cooldownUsers.includes(event.author.id)) {
-    const client = await google.discoverAPI("https://commentanalyzer.googleapis.com/$discovery/rest?version=v1alpha1");
     const analyzeRequest = {
       comment: {
         text: event.content,
@@ -47,35 +36,28 @@ export const checkSwearWord = async (event: Message) => {
         TOXICITY: {},
       },
     };
-    // FIXME: Custom client for Perspective API, Google API typings are bad
-    (client.comments as Comments).analyze(
-      {
-        key: process.env.PERSPECTIVE_API_KEY!,
-        resource: analyzeRequest,
-      },
-      async (err, response) => {
-        if (err) console.error(err);
+    
+    const response = await client.analyze(analyzeRequest).catch(error => console.error(error));
+    if (response == null) return;
 
-        if (response.data.attributeScores.TOXICITY.summaryScore.value < 0.8) return;
+    if (response.attributeScores.TOXICITY!.summaryScore.value < 0.8) return;
 
-        const reminder = await event.reply({ content: "No swear" });
+    const reminder = await event.reply({ content: "No swear" });
 
-        cooldownUsers.push(event.author.id);
+    cooldownUsers.push(event.author.id);
 
-        setTimeout(async () => {
-          try {
-            await reminder.delete();
-          } catch {}
-        }, 4500);
+    setTimeout(async () => {
+      try {
+        await reminder.delete();
+      } catch {}
+    }, 4500);
 
-        setTimeout(() => {
-          cooldownUsers.splice(
-            cooldownUsers.findIndex((id) => id === event.author.id),
-            1
-          );
-        }, 12000);
-      }
-    );
+    setTimeout(() => {
+      cooldownUsers.splice(
+        cooldownUsers.findIndex((id) => id === event.author.id),
+        1
+      );
+    }, 12000);
   }
 }
 
