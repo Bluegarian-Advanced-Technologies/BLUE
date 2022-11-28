@@ -1,6 +1,5 @@
 import { ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData } from "discord.js";
 import { ApplicationCommandPrimitiveData, OptionType } from "../../classes/BACH";
-import Command from "../../classes/Command";
 import { Context } from "../../classes/Context";
 import Event from "../../classes/Event";
 import settings from "../../settings.json" assert { type: "json" };
@@ -12,12 +11,6 @@ export default new Event({
   eventType: "messageCreate",
   disableExempted: true,
 }, async (client, message) => {
-  const findTextCommand = (command: string): Command | undefined => {
-    const query = client.bach.commands.get(command);
-    if (query?.alias) return client.bach.commands.get(query.target) as Command;
-    return query;
-  };
-
   try {
     if (message.author.bot || !message.guild) return;
 
@@ -27,7 +20,7 @@ export default new Event({
     
     const parameters = message.content.slice(settings.prefix.length).trim().split(/ +/g);
     
-    const command = findTextCommand(parameters.shift()?.toLowerCase() ?? "");
+    const command = client.bach.findTextCommand(parameters.shift()?.toLowerCase() ?? "");
     if (!command) return;
 
     let subcommand: string | undefined;

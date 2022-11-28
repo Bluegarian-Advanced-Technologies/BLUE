@@ -199,6 +199,23 @@ class BACH {
         "error"
       );
   }
+
+  findTextCommand(command: string): Command | undefined {
+    const query = this.commands.get(command);
+    if (query?.alias) return this.commands.get(query.target) as Command;
+    return query;
+  }
+
+  checkCommandExists(isInteraction: boolean, targetCommand: string) {
+    if (isInteraction) {
+      const command = this.commands.get(targetCommand.toLowerCase());
+      if (command == null) return false;
+    } else {
+      const command = this.findTextCommand(targetCommand);
+      if (command == null) return false;
+    }
+    return true;
+  }
 }
 
 export default BACH;
