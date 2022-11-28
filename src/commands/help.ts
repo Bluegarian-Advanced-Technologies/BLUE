@@ -158,6 +158,18 @@ export default new Command({
   if (helpCategory != null) {
     const category = commandCategories.find((cat) => cat.category === helpCategory);
 
+    if (category == null) {
+      return await context.reply({
+        embeds: [
+          helpEmbed
+            .setColor(settings.colors.error as ColorResolvable)
+            .setDescription(`Category \`${helpCategory}\` does not exist.`)
+            .setFooter(null)
+            .setTimestamp(null),
+        ],
+      });
+    }
+
     helpEmbed.setTitle(`Commands of ${category!.category}`);
     helpEmbed.setDescription(
       `Command options wrapped in \`<>\` are **required**, whilst \`[]\` are **optional**. All commands have their (**/**) variants.\n`

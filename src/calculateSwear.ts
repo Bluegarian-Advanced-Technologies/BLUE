@@ -7,7 +7,6 @@ import swearWords from "./models/swearWords";
 
 import localSwearWords from "./swearWords.json" assert { type: "json" };
 
-const client = new Perspective({ apiKey: process.env.PERSPECTIVE_API_KEY! });
 const swearWordsCollection = new LiveCollection(swearWords);
 
 const cooldownUsers: string[] = [];
@@ -18,6 +17,7 @@ export const shouldRemind = (severity = 1) => {
 };
 
 export const checkSwearWord = async (event: Message) => {
+  const client = new Perspective({ apiKey: process.env.PERSPECTIVE_API_KEY! });
   const word = swearWordsCollection.getAll().find((word) =>
     event.content
       .toLowerCase()

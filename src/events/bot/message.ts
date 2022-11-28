@@ -1,6 +1,5 @@
 import { ApplicationCommandOptionData, ApplicationCommandOptionType, ApplicationCommandSubCommandData } from "discord.js";
 import { ApplicationCommandPrimitiveData, OptionType } from "../../classes/BACH";
-import Command from "../../classes/Command";
 import { Context } from "../../classes/Context";
 import Event from "../../classes/Event";
 import settings from "../../settings.json" assert { type: "json" };
@@ -12,12 +11,6 @@ export default new Event({
   eventType: "messageCreate",
   disableExempted: true,
 }, async (client, message) => {
-  const findTextCommand = (command: string): Command | undefined => {
-    const query = client.bach.commands.get(command);
-    if (query?.alias) return client.bach.commands.get(query.target) as Command;
-    return query;
-  };
-
   try {
     if (message.author.bot || !message.guild) return;
 
@@ -27,7 +20,7 @@ export default new Event({
     
     const parameters = message.content.slice(settings.prefix.length).trim().split(/ +/g);
     
-    const command = findTextCommand(parameters.shift()?.toLowerCase() ?? "");
+    const command = client.bach.findTextCommand(parameters.shift()?.toLowerCase() ?? "");
     if (!command) return;
 
     let subcommand: string | undefined;
@@ -122,7 +115,7 @@ export default new Event({
     if (command.hasSubcommands) {
       const subcommandRaw = command.options.find((sub) => sub.name === subcommand) as ApplicationCommandSubCommandData | undefined;
       if (subcommandRaw == null) return await message.reply({
-        embeds: [embedMessage("Invalid subcommand", "Please provide a valid subcommand", "error")]
+        embeds: [embedMessage("Invalid subcommand!", "Please provide a valid subcommand", "error")]
       });
       // const validationResult = validateSubcommand(subcommandRaw as ApplicationCommandSubCommandData);
       // if (subcommandRaw == null)
@@ -135,15 +128,20 @@ export default new Event({
           });
         if (expectedArg.choices) {
           const optionsList = [];
+          let value: OptionType;
 
           for (let j = 0; j < expectedArg.choices.length; j++) {
             if (expectedArg.choices[j].name.toLowerCase() === options[i].toLowerCase()) 
-              richOptions.push(expectedArg.choices[j].value);
+              value = expectedArg.choices[j].value;
             optionsList.push(expectedArg.choices[j].name);
           }
-          return await message.reply({
-            embeds: [embedMessage("Invalid usage!", `${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`, "error")]
-          });
+          
+          if (value == null) {
+            return await message.reply({
+              embeds: [embedMessage("Invalid usage!", `${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArg.name}`, "error")]
+            });
+          }
+          richOptions.push(value);
         } else {
           const result = await validateArg(options[i], expectedArg, i);
           if (result instanceof Error) {
@@ -163,15 +161,20 @@ export default new Event({
           });
         if (expectedArgs[i].choices && expectedArgs[i].required) {
           const optionsList = [];
+          let value: OptionType;
 
           for (let j = 0; j < expectedArgs[i].choices!.length; j++) {
             if (expectedArgs[i].choices![j].name.toLowerCase() === options[i].toLowerCase()) 
-              richOptions.push(expectedArgs[i].choices![j].value);
+              value = expectedArgs[i].choices![j].value;
             optionsList.push(expectedArgs[i].choices![j].name);
           }
-          return await message.reply({
-            embeds: [embedMessage("Invalid usage!", `${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArgs[i].name}`, "error")]
-          });
+          
+          if (value == null) {
+            return await message.reply({
+              embeds: [embedMessage("Invalid usage!", `${optionsList.join(" | ")} expected at argument ${i + 1}: ${expectedArgs[i].name}`, "error")]
+            });
+          }
+          richOptions.push(value);
         } else {
           const result = await validateArg(options[i], expectedArgs[i], i);
           if (result instanceof Error) {
@@ -194,17 +197,9 @@ export default new Event({
 
     // client.bach.runPreflightChecks(context);
 
-    try {
-      await command.execute(client, context);
+    await command.execute(client, context);
 
-      client.bach.commandCooldowns.addCooldown(context.user.id, context.guild.id, command.cooldown);
-    } catch (e) {
-      console.error(e);
-      await message.reply({
-        content: `**FATAL EXCEPTION CAUGHT!**\n ||<@${client.application!.owner!.id}>||`,
-        embeds: [embedMessage((e as Error).name, (e as Error).message, "error")],
-      });
-    }
+    client.bach.commandCooldowns.addCooldown(context.user.id, context.guild.id, command.cooldown);
   } catch (e) {
     console.error(e);
     await message.reply({

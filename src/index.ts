@@ -38,6 +38,7 @@ import eventHandler from "./eventHandler";
 import settings from "./settings.json" assert { type: "json" };
 
 import Client from "./classes/Client";
+import { initialize } from "./calculateSwear";
 
 const client = new Client({
   intents: [
@@ -128,9 +129,13 @@ if (process.env.LOCAL_LAVALINK === "yes") {
 await commandHandler.initialize(client);
 await eventHandler.initialize(client);
 
+await initialize();
+
 // Launch bot
 await client.run(process.env.TOKEN);
 console.timeEnd("Bot start time");
 
 // Relay voice data to Lavalink server
 client.on("raw", (data) => client.audioManager.updateVoiceState(data));
+
+process.on("unhandledRejection", e => console.error(e));

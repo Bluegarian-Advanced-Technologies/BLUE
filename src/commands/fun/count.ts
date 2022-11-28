@@ -20,7 +20,7 @@ export default new Command({
   options: [
     {
       type: ApplicationCommandOptionType.Subcommand,
-      name: "begin",
+      name: "start",
       description: "Starts counting",
       options: [
         {
@@ -54,7 +54,7 @@ export default new Command({
     return;
   };
   switch (context.subcommand) {
-    case "begin": {
+    case "start": {
       if (counters?.find((counter) => counter.id === context.channel.id + context.guild.id)) 
         return context.embedReply("Cannot start new counter while already counting", undefined, "warn");
 
