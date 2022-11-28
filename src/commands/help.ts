@@ -163,7 +163,9 @@ export default new Command({
         embeds: [
           helpEmbed
             .setColor(settings.colors.error as ColorResolvable)
-            .setDescription(`Category \`${helpCategory}\` does not exist.`),
+            .setDescription(`Category \`${helpCategory}\` does not exist.`)
+            .setFooter(null)
+            .setTimestamp(null),
         ],
       });
     }

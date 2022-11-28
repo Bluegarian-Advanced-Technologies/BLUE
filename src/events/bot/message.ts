@@ -115,7 +115,7 @@ export default new Event({
     if (command.hasSubcommands) {
       const subcommandRaw = command.options.find((sub) => sub.name === subcommand) as ApplicationCommandSubCommandData | undefined;
       if (subcommandRaw == null) return await message.reply({
-        embeds: [embedMessage("Invalid subcommand", "Please provide a valid subcommand", "error")]
+        embeds: [embedMessage("Invalid subcommand!", "Please provide a valid subcommand", "error")]
       });
       // const validationResult = validateSubcommand(subcommandRaw as ApplicationCommandSubCommandData);
       // if (subcommandRaw == null)
