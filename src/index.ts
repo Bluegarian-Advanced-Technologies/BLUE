@@ -38,6 +38,7 @@ import eventHandler from "./eventHandler";
 import settings from "./settings.json" assert { type: "json" };
 
 import Client from "./classes/Client";
+import { initialize } from "./calculateSwear";
 
 const client = new Client({
   intents: [
@@ -127,6 +128,8 @@ if (process.env.LOCAL_LAVALINK === "yes") {
 // Start command handler
 await commandHandler.initialize(client);
 await eventHandler.initialize(client);
+
+await initialize();
 
 // Launch bot
 await client.run(process.env.TOKEN);
