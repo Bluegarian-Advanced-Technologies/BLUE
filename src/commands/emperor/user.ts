@@ -52,11 +52,11 @@ export default new Command({
         return await context.embedReply("Access Denied", "The Emperor's elevation cannot be changed.", "error");
       }
 
-      if (users.getAll().find((u) => u.userId === targetUser)) {
-        await users.update({ userId: targetUser }, { elevation: targetElevation });
+      if (users.getAll().find((u) => u.userId === targetUser.id)) {
+        await users.update({ userId: targetUser.id }, { elevation: targetElevation });
       } else {
         await users.set({
-          userId: targetUser,
+          userId: targetUser.id,
           elevation: targetElevation,
         });
       }
