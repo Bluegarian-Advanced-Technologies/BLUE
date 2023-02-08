@@ -8,7 +8,9 @@ const loadCommand = async <T extends keyof ClientEvents>(client: Client, path: s
   const event = (await importDefault(path)) as Event<T>;
   if (event.once) {
     client.once(event.eventType, async (...eventData) => {
-      const guild = eventData[0] && eventData[0] instanceof Guild ? eventData[0] : undefined;
+      const propertyDescriptor = Object.getOwnPropertyDescriptor(eventData[0], "guild");
+      const guild = propertyDescriptor && propertyDescriptor.value instanceof Guild ? propertyDescriptor.value : undefined;
+
       const guildDisabledEvents = client.bach.disabledEvents.getAll().find((doc) => doc.guildId === guild?.id);
       if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id.toLowerCase())) return;
 
@@ -20,7 +22,9 @@ const loadCommand = async <T extends keyof ClientEvents>(client: Client, path: s
     });
   } else {
     client.on(event.eventType, async (...eventData) => {
-      const guild = eventData[0] && eventData[0] instanceof Guild ? eventData[0] : undefined;
+      const propertyDescriptor = Object.getOwnPropertyDescriptor(eventData[0], "guild");
+      const guild = propertyDescriptor && propertyDescriptor.value instanceof Guild ? propertyDescriptor.value : undefined;
+      
       const guildDisabledEvents = client.bach.disabledEvents.getAll().find((doc) => doc.guildId === guild?.id);
       if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id.toLowerCase())) return;
 
