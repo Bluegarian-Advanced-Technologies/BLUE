@@ -15,7 +15,7 @@ export default new Event({
     if (message.author.bot || !message.guild) return;
 
     if (message.content.startsWith(`<@${client.user!.id}>`) || message.content.startsWith(`<@!${client.user!.id}>`))
-      return message.reply(`Hello! I am BLUE. To see a list of commands, use the \`${settings.prefix}help\` command.`);
+      return message.reply(`Greetings! I am the BLUE. To see a list of commands, use the \`${settings.prefix}help\` command.`);
     if (!message.content.startsWith(settings.prefix)) return;
     
     const parameters = message.content.slice(settings.prefix.length).trim().split(/ +/g);

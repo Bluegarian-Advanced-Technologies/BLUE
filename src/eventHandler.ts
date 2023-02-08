@@ -4,13 +4,13 @@ import Event from "./classes/Event";
 
 import { recursivelyGetFiles, importDefault } from "./utilities";
 
-const loadCommand = async<T extends keyof ClientEvents>(client: Client, path: string) => {
-  const event = await importDefault(path) as Event<T>;
+const loadCommand = async <T extends keyof ClientEvents>(client: Client, path: string) => {
+  const event = (await importDefault(path)) as Event<T>;
   if (event.once) {
     client.once(event.eventType, async (...eventData) => {
       const guild = eventData[0] && eventData[0] instanceof Guild ? eventData[0] : undefined;
       const guildDisabledEvents = client.bach.disabledEvents.getAll().find((doc) => doc.guildId === guild?.id);
-      if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id)) return;
+      if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id.toLowerCase())) return;
 
       try {
         await event.execute(client, ...eventData);
@@ -22,7 +22,7 @@ const loadCommand = async<T extends keyof ClientEvents>(client: Client, path: st
     client.on(event.eventType, async (...eventData) => {
       const guild = eventData[0] && eventData[0] instanceof Guild ? eventData[0] : undefined;
       const guildDisabledEvents = client.bach.disabledEvents.getAll().find((doc) => doc.guildId === guild?.id);
-      if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id)) return;
+      if (guildDisabledEvents && (guildDisabledEvents.events as string[]).includes(event.id.toLowerCase())) return;
 
       try {
         await event.execute(client, ...eventData);
@@ -40,7 +40,7 @@ const initialize = async (client: Client, eventsDir?: string) => {
   for (let i = 0; i < events.length; i++) {
     try {
       const event = await loadCommand(client, events[i]);
-      
+
       client.bach.events.set(event.id.toLowerCase(), event);
     } catch (err) {
       console.error(err);

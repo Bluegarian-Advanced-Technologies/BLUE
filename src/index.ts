@@ -1,16 +1,19 @@
 import { Database, Environment } from "@nextium/common";
 
 if (process.env.NODE_ENV !== "production") {
-  Environment.load([
-    "PERSPECTIVE_API_KEY",
-    "BOT_ID", 
-    "TOKEN", 
-    "MONGODB_URI",
-    "LOCAL_LAVALINK", 
-    "LAVALINK_PASSWORD", 
-    // "SPOTIFY_CLIENT_ID", 
-    // "SPOTIFY_CLIENT_SECRET"
-  ], true);
+  Environment.load(
+    [
+      "PERSPECTIVE_API_KEY",
+      "BOT_ID",
+      "TOKEN",
+      "MONGODB_URI",
+      "LOCAL_LAVALINK",
+      "LAVALINK_PASSWORD",
+      // "SPOTIFY_CLIENT_ID",
+      // "SPOTIFY_CLIENT_SECRET"
+    ],
+    true
+  );
 }
 
 import path from "path";
@@ -40,47 +43,50 @@ import settings from "./settings.json" assert { type: "json" };
 import Client from "./classes/Client";
 import { initialize } from "./calculateSwear";
 
-const client = new Client({
-  intents: [
-    IntentsBitField.Flags.Guilds,
-    IntentsBitField.Flags.GuildMessages,
-    IntentsBitField.Flags.MessageContent,
-    IntentsBitField.Flags.GuildMessageReactions,
-    IntentsBitField.Flags.GuildVoiceStates,
-    IntentsBitField.Flags.GuildMembers,
-  ],
-  presence: {
-    activities: [
+const client = new Client(
+  {
+    intents: [
+      IntentsBitField.Flags.Guilds,
+      IntentsBitField.Flags.GuildMessages,
+      IntentsBitField.Flags.MessageContent,
+      IntentsBitField.Flags.GuildMessageReactions,
+      IntentsBitField.Flags.GuildVoiceStates,
+      IntentsBitField.Flags.GuildMembers,
+    ],
+    presence: {
+      activities: [
+        {
+          name: settings.prefix + "help",
+          type: ActivityType.Listening,
+        },
+      ],
+    },
+  },
+  {
+    nodes: [
       {
-        name: settings.prefix + "help",
-        type: ActivityType.Listening,
+        host: process.env.LOCAL_LAVALINK === "yes" ? "0.0.0.0" : "24.141.115.80",
+        port: 2333,
+        password: process.env.LAVALINK_PASSWORD,
+        secure: false,
       },
     ],
-  },
-}, {
-  nodes: [
-    {
-      host: process.env.LOCAL_LAVALINK === "yes" ? "0.0.0.0" : "24.141.115.80",
-      port: 2333,
-      password: process.env.LAVALINK_PASSWORD,
-      secure: false,
+    plugins: [
+      // // The unload method is not declared
+      // // @ts-expect-error The plugin uses the original erela.js package
+      // new Spotify({
+      //   clientID: process.env.SPOTIFY_CLIENT_ID as string,
+      //   clientSecret: process.env.SPOTIFY_CLIENT_SECRET as string,
+      // }),
+      // // @ts-expect-error The plugin uses the original erela.js package
+      // new Filters(),
+    ],
+    send: (id, payload) => {
+      const guild = client.guilds.cache.get(id);
+      if (guild) guild.shard.send(payload);
     },
-  ],
-  plugins: [
-    // // The unload method is not declared
-    // // @ts-expect-error The plugin uses the original erela.js package
-    // new Spotify({
-    //   clientID: process.env.SPOTIFY_CLIENT_ID as string,
-    //   clientSecret: process.env.SPOTIFY_CLIENT_SECRET as string,
-    // }),
-    // // @ts-expect-error The plugin uses the original erela.js package
-    // new Filters(),
-  ],
-  send: (id, payload) => {
-    const guild = client.guilds.cache.get(id);
-    if (guild) guild.shard.send(payload);
-  },
-});
+  }
+);
 
 client.once("ready", async () => {
   const chalk = await import("chalk");
@@ -113,7 +119,7 @@ if (process.env.LOCAL_LAVALINK === "yes") {
   console.log("Starting local Lavalink process...");
   console.time("Lavalink startup time");
 
-  const lavalinkProcess = spawn("C:\\jdk-19\\bin\\java", ["-Xmx350M", "-jar", "Lavalink.jar"], {
+  const lavalinkProcess = spawn("java", ["-Xmx600M", "-jar", "Lavalink.jar"], {
     cwd: path.join(__dirname, "../lavalink"),
   });
 
@@ -138,4 +144,4 @@ console.timeEnd("Bot start time");
 // Relay voice data to Lavalink server
 client.on("raw", (data) => client.audioManager.updateVoiceState(data));
 
-process.on("unhandledRejection", e => console.error(e));
+process.on("unhandledRejection", (e) => console.error(e));
