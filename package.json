@@ -23,23 +23,23 @@
     "@nextium/common": "^1.2.4",
     "@nextium/erela.js": "^3.0.6-pre",
     "bufferutil": "^4.0.7",
-    "chalk": "^5.1.2",
+    "chalk": "^5.2.0",
     "cheerio": "^1.0.0-rc.12",
-    "discord-api-types": "^0.37.20",
-    "discord.js": "^14.6.0",
+    "discord-api-types": "^0.37.31",
+    "discord.js": "^14.7.1",
     "erela.js-filters": "^1.2.7",
     "erela.js-spotify": "^1.2.0",
     "erlpack": "^0.1.4",
     "module-alias": "^2.2.2",
     "node-fetch": "^3.3.0",
     "striptags": "^3.2.0",
-    "utf-8-validate": "^5.0.10",
-    "zlib-sync": "^0.1.7"
+    "utf-8-validate": "^6.0.2",
+    "zlib-sync": "^0.1.8"
   },
   "devDependencies": {
     "@types/module-alias": "^2.0.1",
     "nodemon": "^2.0.20",
-    "tsc-watch": "^5.0.3",
-    "typescript": "^4.9.3"
+    "tsc-watch": "^6.0.0",
+    "typescript": "^4.9.5"
   }
 }
